@@ -167,7 +167,7 @@
   const extraCache = $state<Record<string, HTMLImageElement>>({});
 
   const hoveredNode = writable<Node | undefined>();
-  const render: Render = (({ context, width, height }) => {
+  const render: Render = ({ context, width, height }) => {
     const start = window.performance.now();
 
     if (!$skillTree) {
@@ -533,7 +533,7 @@
     const end = window.performance.now();
 
     context.fillText(`${(end - start).toFixed(1)}ms`, width - 5, 17);
-  });
+  };
 
   let downX = 0;
   let downY = 0;
