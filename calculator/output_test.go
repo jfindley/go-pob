@@ -151,7 +151,6 @@ func TestOutput(t *testing.T) {
 					checkDamage(t, sg.damage, env.Player.Output)
 				})
 			}
-
 		})
 	}
 }
