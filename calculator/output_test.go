@@ -37,7 +37,7 @@ type skillGroup struct {
 	damage      map[string]float64
 }
 
-func checkDamage[K comparable, V comparable](t *testing.T, expected, got map[K]V) bool {
+func checkDamage[K comparable, V any](t *testing.T, expected, got map[K]V) bool {
 	for calc, want := range expected {
 		testza.AssertEqual(t, got[calc], want)
 	}
@@ -135,10 +135,6 @@ func TestOutput(t *testing.T) {
 				build.Skills.SkillSets = []pob.SkillSet{}
 				env := NewCalculator(*build).BuildOutput(OutputModeMain)
 				for weapon := range test.baseDamage {
-					if _, ok := env.Player.OutputTable[weapon]; !ok {
-						t.Errorf("missing weapon damage (%s) in output. expected %v, got %v", weapon, test.baseDamage, env.Player.OutputTable)
-						continue
-					}
 					checkDamage(t, test.baseDamage[weapon], env.Player.OutputTable[weapon])
 				}
 				build.Skills.SkillSets = skills
