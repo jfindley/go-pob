@@ -5,6 +5,8 @@ import (
 	"os"
 	"testing"
 
+	"github.com/MarvinJWendt/testza"
+
 	"github.com/Vilsol/go-pob-data/poe"
 	"github.com/Vilsol/go-pob/cache"
 
@@ -35,14 +37,9 @@ type skillGroup struct {
 	damage      map[string]float64
 }
 
-func equalDamage(expected, got map[string]float64) bool {
+func checkDamage[K comparable, V comparable](t *testing.T, expected, got map[K]V) bool {
 	for calc, want := range expected {
-		if _, ok := got[calc]; !ok {
-			return false
-		}
-		if got[calc] != want {
-			return false
-		}
+		testza.AssertEqual(t, got[calc], want)
 	}
 	return true
 }
@@ -142,9 +139,7 @@ func TestOutput(t *testing.T) {
 						t.Errorf("missing weapon damage (%s) in output. expected %v, got %v", weapon, test.baseDamage, env.Player.OutputTable)
 						continue
 					}
-					if !equalDamage(test.baseDamage[weapon], env.Player.OutputTable[weapon]) {
-						t.Errorf("incorrect damage value, expected %#v, got %#v", test.baseDamage, env.Player.OutputTable)
-					}
+					checkDamage(t, test.baseDamage[weapon], env.Player.OutputTable[weapon])
 				}
 				build.Skills.SkillSets = skills
 			}
@@ -153,9 +148,7 @@ func TestOutput(t *testing.T) {
 				t.Run(sg.name, func(t *testing.T) {
 					sgbuild := build.WithMainSocketGroup(sg.socketGroup)
 					env := NewCalculator(*sgbuild).BuildOutput(OutputModeMain)
-					if !equalDamage(sg.damage, env.Player.Output) {
-						t.Errorf("incorrect damage value, expected %#v, got %#v", sg.damage, env.Player.Output)
-					}
+					checkDamage(t, sg.damage, env.Player.Output)
 				})
 			}
 
