@@ -3,10 +3,10 @@ package calculator
 import (
 	"math"
 	"regexp"
+	"slices"
 	"strings"
 
 	utils2 "github.com/Vilsol/go-pob-data/utils"
-	"golang.org/x/exp/slices"
 
 	"github.com/Vilsol/go-pob-data/poe"
 

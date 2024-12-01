@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"golang.org/x/exp/slog"
+	"log/slog"
 )
 
 func Has[K comparable, V any](m map[K]V, key K) bool {
