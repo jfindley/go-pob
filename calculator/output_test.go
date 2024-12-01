@@ -50,7 +50,7 @@ func equalDamage(expected, got map[string]float64) bool {
 func TestOutput(t *testing.T) {
 	tc := []testdata{
 		{
-			name:      "Fireball added cold",
+			name:      "Fireball",
 			buildData: "../testdata/builds/Fireball.xml",
 			baseDamage: map[OutTable]map[string]float64{
 				OutTableMainHand: {
