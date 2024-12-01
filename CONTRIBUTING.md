@@ -55,36 +55,37 @@ Clone the repository using this command:
 git clone -b dev https://github.com/Vilsol/go-pob.git
 ```
 
-### Backend (Go)
+### Windows
 
-We require you to use Go version 1.21 or above.
+If you are on Windows, you will semi-manually need to get all the dependencies needed for development.
 
-To build the WASM binary, you can use the following command:
+The suggested way to achieve this is via WinGet (except for `golangci-lint`, it has an outdated version, please use manual step below).
 
 ```shell
-GOOS=js GOARCH=wasm go build -ldflags="-s -w" -v -o frontend/static/go-pob.wasm ./wasm
+winget install --id=Task.Task  -e
+winget install --id=Schniz.fnm  -e
+winget install --id=GoLang.Go -v "1.23.3" -e
 ```
 
-To re-generate any new typings that have been exposed from Go, you can use this:
-```shell
-go generate -tags tools -x ./...
-```
+If you do not have WinGet, you will need to follow the manual install instructions for each:
 
-### Frontend (Svelte)
+* Task: https://taskfile.dev/installation/
+* fnm: https://github.com/Schniz/fnm?tab=readme-ov-file#installation
+* Go: https://go.dev/doc/install
+* golangci-lint https://golangci-lint.run/welcome/install/
 
-We require NodeJS version `18.4.0` which can either be installed via `nvm` or via installer.
+After installing dependencies, you have two more steps
 
-We also use the [`pnpm`](https://pnpm.io/) package manager.
+1. For fnm: make sure that you add it to your shell https://github.com/Schniz/fnm?tab=readme-ov-file#powershell and then run `fnm use` in this project directory
+2. For node: execute `corepack enable` to be able to use `pnpm`
 
-You can install all frontend dependencies using:
-```shell
-pnpm i
-```
+### Linux
 
-And then start the dev server via:
-```shell
-pnpm run dev
-```
+If you are on Linux, you have an option to have all the dependencies automatically maintained with `devbox`.
+Just follow the installation instructions here: https://www.jetify.com/docs/devbox/installing_devbox/.
+If possible, you should also setup `direnv` so you don't need to run `devbox shell` every time: https://direnv.net/
+
+If unable, then have a look at the manual Windows instructions, and install the same tools.
 
 ## Setting up a development environment
 
@@ -95,6 +96,38 @@ All you need are the [Go](https://marketplace.visualstudio.com/items?itemName=go
 
 If you want to use an IDE instead, [GoLand](https://www.jetbrains.com/go/) (for backend) and [WebStorm](https://www.jetbrains.com/webstorm/) (for frontend) are recommended.
 
+### Backend (Go)
+
+To build the WASM binary, you can use the following command:
+
+```shell
+task build-go
+```
+
+To re-generate any new typings that have been exposed from Go, you can use this:
+```shell
+task generate
+```
+
+If you want those to run continuously while developing, you can use:
+```shell
+task dev-go
+```
+
+### Frontend (Svelte)
+
+The frontend resides in the `./frontend`
+
+You can start the dev server via:
+```shell
+task dev-frontend
+```
+
+You can build it via:
+```shell
+task build-frontend
+```
+
 ## Testing
 
 PoB uses the builtin Go testing platform together with [testza](https://github.com/MarvinJWendt/testza) framework.
@@ -103,9 +136,9 @@ All tests are run twice, first time in native Go, second time through WASM to en
 
 ### Running Native Tests
 
-Simply executing `go test ./...` from the project root directory should run all tests.
+Simply executing `task test` should run all tests.
 
-### Running WASM Tests
+### Running WASM Tests (you probably don't need this)
 
 First ensure that you have the appropriate NodeJS version installed. (current version can be seen in [devbox.json](devbox.json))
 
@@ -117,13 +150,17 @@ If any of these linters fail, the CI build will not pass.
 
 ### Backend (Go)
 
-The backend is linted using [`golangci-lint`](https://golangci-lint.run/usage/install/). You can execute it via `golangci-lint run`
+The backend is linted using [`golangci-lint`](https://golangci-lint.run/usage/install/).
+
+You can execute it via `task lint-go` and format with `task format-go`.
 
 ### Frontend (Svelte)
 
-The frontend is linted using `prettier`, `eslint` and `svelte-check`. You can execute those by using `pnpm run lint` and `pnpm run check`
+The frontend is linted using `prettier` and `eslint`.
 
-## Setting up a PoB environment
+You can execute those by using `task lint-frontend` and format with `task format-frontend`.
+
+## Setting up a PoB reference environment
 
 You want to clone the `dev` branch of this repo https://github.com/Vilsol/PathOfBuilding (important, as it's pinned to specific commit)
 
