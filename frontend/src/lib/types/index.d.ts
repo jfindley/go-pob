@@ -74,12 +74,14 @@ export declare namespace calculator {
     GrantedSkillsItems?: Record<string, unknown | undefined>;
     Flasks?: Record<string, unknown | undefined>;
     GrantedPassives?: Record<string, unknown | undefined>;
+    AllocatedNodes?: Record<string, data.Node>;
     AuxSkillList?: Record<string, unknown | undefined>;
     ModeBuffs: boolean;
     ModeCombat: boolean;
     ModeEffective: boolean;
     KeystonesAdded?: Record<string, unknown | undefined>;
     MainSocketGroup: number;
+    DebugErrors?: Array<string>;
   }
   interface GemEffect {
     GrantedEffect?: calculator.GrantedEffect;
@@ -159,7 +161,7 @@ export declare namespace calculator {
     Build?: pob.PathOfBuilding;
     TreeVersion: string;
     Nodes?: Record<string, unknown | undefined>;
-    AllocNodes?: Record<string, unknown | undefined>;
+    AllocNodes?: Record<string, data.Node>;
     AllocSubgraphNodes?: Record<string, unknown | undefined>;
     AllocExtendedNodes?: Record<string, unknown | undefined>;
     Jewels?: Record<string, unknown | undefined>;
@@ -491,6 +493,8 @@ export declare namespace pob {
     Level: number;
     MainSocketGroup: number;
     TargetVersion: string;
+    PassiveNodes?: Array<number>;
+    PassiveNodesStartPaths?: Record<number, Array<number> | undefined>;
     PlayerStats: Array<pob.PlayerStat>;
   }
   interface Calcs {
@@ -543,6 +547,8 @@ export declare namespace pob {
     TreeView: pob.TreeView;
     Config: pob.Config;
     AddNewSocketGroup(): void;
+    AllocateNodes(nodeIds?: Array<number>): void;
+    DeallocateNodes(nodeId: number): void;
     DeleteAllSocketGroups(): void;
     DeleteSocketGroup(index: number): void;
     GetStringOption(name: string): string;
@@ -609,7 +615,7 @@ export declare namespace pob {
     ClassID: number;
     AscendClassID: number;
     TreeVersion: string;
-    Nodes: string;
+    NodesAttr: string;
     MasteryEffects: string;
     URL: string;
   }

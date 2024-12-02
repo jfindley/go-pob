@@ -4,6 +4,8 @@ import (
 	"encoding/xml"
 	"fmt"
 	"regexp"
+	"strconv"
+	"strings"
 
 	"github.com/Vilsol/go-pob/pob"
 )
@@ -42,6 +44,18 @@ func ParseBuild(rawXML []byte) (*pob.PathOfBuilding, error) {
 				}
 			}
 		}
+	}
+
+	build.Build.PassiveNodes = make([]int64, 0, 100)
+	// TODO: This only grabs the activeSpec but there are many here
+	var spec = build.Tree.Specs[build.Tree.ActiveSpec-1]
+	var nodeStrs = strings.Split(spec.NodesAttr, ",")
+	for _, str := range nodeStrs {
+		var num, err = strconv.ParseInt(str, 10, 64)
+		if err != nil {
+			return nil, fmt.Errorf("spec has some non-integer nodes: %s", spec.NodesAttr)
+		}
+		build.Build.PassiveNodes = append(build.Build.PassiveNodes, num)
 	}
 
 	return &build, nil

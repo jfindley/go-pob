@@ -111,6 +111,8 @@ class PoBWorker {
         OutputTable: out.Player.OutputTable,
         SkillFlags: out.Player.MainSkill.SkillFlags
       });
+      console.log('Errors from last tick:');
+      console.log(out.DebugErrors);
     }
   }
 
@@ -220,6 +222,16 @@ class PoBWorker {
   SetLevel(value: number) {
     this.currentBuild?.SetLevel(value);
     void this.Tick('SetLevel');
+  }
+
+  AllocateNodes(nodeIds: number[]) {
+    this.currentBuild?.AllocateNodes(nodeIds);
+    void this.Tick('AllocateNode');
+  }
+
+  DeallocateNodes(nodeId: number) {
+    this.currentBuild?.DeallocateNodes(nodeId);
+    void this.Tick('DeallocateNode');
   }
 
   CalculateTreePath(version: string, activeNodes: number[], target: number) {

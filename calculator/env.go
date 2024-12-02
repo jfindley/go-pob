@@ -1,6 +1,7 @@
 package calculator
 
 import (
+	"strconv"
 	"strings"
 
 	"github.com/Vilsol/go-pob-data/poe"
@@ -11,9 +12,20 @@ import (
 	"github.com/Vilsol/go-pob/utils"
 )
 
-func InitEnv(build *pob.PathOfBuilding, mode OutputMode) (*Environment, ModStoreFuncs, ModStoreFuncs, ModStoreFuncs) {
+func InitEnv(build *pob.PathOfBuilding, envCache *EnvironmentCache, mode OutputMode) (*Environment, ModStoreFuncs, ModStoreFuncs, ModStoreFuncs) {
 	env := &Environment{}
+	env.Cache = envCache
 
+	// TODO This come from the build at some point but below it's not so not sure what to do here yet
+	currentTreeVersion := data.LatestTreeVersion
+
+	// Clear Node Mod cache if tree has changed
+	if env.Cache.TreeVersion != currentTreeVersion {
+		env.Cache.modsForNodes = make(map[string]ModList, len(data.TreeVersions[currentTreeVersion].Tree().Nodes))
+		env.Cache.TreeVersion = currentTreeVersion
+	}
+
+	env.DebugErrors = make([]string, 0)
 	env.Build = build
 	env.Mode = mode
 	env.Spec = NewPassiveSpec(build, data.LatestTreeVersion)
@@ -195,26 +207,28 @@ func InitEnv(build *pob.PathOfBuilding, mode OutputMode) (*Environment, ModStore
 	cachedEnemyDB := env.EnemyModDB.Clone()
 	cachedMinionDB := env.Minion.Clone()
 
-	/*
-		TODO -- Build list of passive nodes
-		local nodes
-		if override.addNodes or override.removeNodes then
-			nodes = { }
-			if override.addNodes then
-				for node in pairs(override.addNodes) do
-					nodes[node.id] = node
-				end
+	var tree = data.TreeVersions[data.LatestTreeVersion].Tree()
+	env.AllocatedNodes = make(map[string]data.Node)
+	/* *
+	// TODO
+	if override.addNodes or override.removeNodes then
+		nodes = { }
+		if override.addNodes then
+			for node in pairs(override.addNodes) do
+				nodes[node.id] = node
 			end
-			for _, node in pairs(env.spec.allocNodes) do
-				if not override.removeNodes or not override.removeNodes[node] then
-					nodes[node.id] = node
-				end
-			end
-		else
-			nodes = copyTable(env.spec.allocNodes, true)
 		end
-		env.allocNodes = nodes
-	*/
+		for _, node in pairs(env.spec.allocNodes) do
+			if not override.removeNodes or not override.removeNodes[node] then
+				nodes[node.id] = node
+			end
+		end
+	end
+	/* */
+	for _, id := range env.Build.Build.PassiveNodes {
+		var strId = strconv.FormatInt(id, 10)
+		env.AllocatedNodes[strId] = tree.Nodes[strId]
+	}
 
 	/*
 		TODO -- Build and merge item modifiers, and create list of radius jewels
@@ -516,10 +530,7 @@ func InitEnv(build *pob.PathOfBuilding, mode OutputMode) (*Environment, ModStore
 		end
 	*/
 
-	/*
-		TODO -- Merge modifiers for allocated passives
-		env.modDB:AddList(calcs.buildModListForNodeList(env, env.allocNodes, true))
-	*/
+	env.ModDB.AddList(buildModListForNodeList(env, env.AllocatedNodes))
 
 	/*
 		TODO -- Find skills granted by tree nodes

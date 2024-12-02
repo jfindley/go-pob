@@ -42,7 +42,9 @@ func (m *ModList) AddDB(db *ModList) {
 	if db == nil {
 		return
 	}
-	m.mods = utils.CopySlice(m.mods)
+
+	newMods := utils.CopySlice(db.mods)
+	m.mods = append(m.mods, newMods...)
 }
 
 func (m *ModList) List(cfg *ListCfg, names ...string) []interface{} {
