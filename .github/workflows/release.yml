@@ -91,4 +91,4 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy ./frontend/build --project-name=pob --env=prod
+          command: pages deploy ./frontend/build --project-name=pob --branch=prod
