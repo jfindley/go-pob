@@ -5,10 +5,10 @@ import (
 	"os"
 	"testing"
 
+	"github.com/MarvinJWendt/testza"
+
 	"github.com/Vilsol/go-pob-data/poe"
 	"github.com/Vilsol/go-pob/cache"
-
-	"github.com/MarvinJWendt/testza"
 
 	"github.com/Vilsol/go-pob/builds"
 	"github.com/Vilsol/go-pob/config"
@@ -24,117 +24,133 @@ func init() {
 	}
 }
 
-func TestEmptyBuild(t *testing.T) {
-	file, err := os.ReadFile("../testdata/builds/Fireball.xml")
-	testza.AssertNoError(t, err)
-
-	build, err := builds.ParseBuild(file)
-	testza.AssertNoError(t, err)
-
-	// Delete all skills
-	build.Skills.SkillSets = []pob.SkillSet{}
-
-	calculator := &Calculator{PoB: build}
-	env := calculator.BuildOutput(OutputModeMain)
-
-	testza.AssertEqual(t, 0.9523809523809523, env.Player.OutputTable[OutTableMainHand]["TotalMin"])
-	testza.AssertEqual(t, 2.8571428571428568, env.Player.OutputTable[OutTableMainHand]["TotalMax"])
-	testza.AssertEqual(t, 1.9047619047619047, env.Player.OutputTable[OutTableMainHand]["AverageHit"])
-	testza.AssertEqual(t, 1.8857142857142855, env.Player.OutputTable[OutTableMainHand]["AverageDamage"])
-	testza.AssertEqual(t, 2.2628571428571425, env.Player.OutputTable[OutTableMainHand]["TotalDPS"])
+type testdata struct {
+	name        string
+	buildData   string
+	baseDamage  map[OutTable]map[string]float64
+	skillDamage []skillGroup
 }
 
-func TestFireballLevel1(t *testing.T) {
-	file, err := os.ReadFile("../testdata/builds/Fireball.xml")
-	testza.AssertNoError(t, err)
-
-	build, err := builds.ParseBuild(file)
-	testza.AssertNoError(t, err)
-
-	build = build.WithMainSocketGroup(2)
-
-	calculator := &Calculator{PoB: build}
-	env := calculator.BuildOutput(OutputModeMain)
-
-	testza.AssertEqual(t, float64(9), env.Player.Output["TotalMin"])
-	testza.AssertEqual(t, float64(14), env.Player.Output["TotalMax"])
-	testza.AssertEqual(t, 11.844999999999999, env.Player.Output["AverageHit"])
-	testza.AssertEqual(t, 11.845, env.Player.Output["AverageDamage"])
-	testza.AssertEqual(t, 15.793333333333333, env.Player.Output["TotalDPS"])
+type skillGroup struct {
+	name        string
+	socketGroup int
+	damage      map[string]float64
 }
 
-func TestFireballLevel20(t *testing.T) {
-	file, err := os.ReadFile("../testdata/builds/Fireball.xml")
-	testza.AssertNoError(t, err)
-
-	build, err := builds.ParseBuild(file)
-	testza.AssertNoError(t, err)
-
-	build = build.WithMainSocketGroup(3)
-
-	calculator := &Calculator{PoB: build}
-	env := calculator.BuildOutput(OutputModeMain)
-
-	testza.AssertEqual(t, float64(1640), env.Player.Output["TotalMin"])
-	testza.AssertEqual(t, float64(2460), env.Player.Output["TotalMax"])
-	testza.AssertEqual(t, 2111.5, env.Player.Output["AverageHit"])
-	testza.AssertEqual(t, 2111.5, env.Player.Output["AverageDamage"])
-	testza.AssertEqual(t, 2815.333333333333, env.Player.Output["TotalDPS"])
+// These two functions check for partial map equality - only keys present in the expected param will be checked.
+func assertMapEqual[M ~map[K]V, K comparable, V any](t *testing.T, expected, got M) {
+	for calc, want := range expected {
+		testza.AssertEqual(t, got[calc], want)
+	}
 }
 
-func TestFireballLevel1AddedColdLevel1(t *testing.T) {
-	file, err := os.ReadFile("../testdata/builds/Fireball.xml")
-	testza.AssertNoError(t, err)
-
-	build, err := builds.ParseBuild(file)
-	testza.AssertNoError(t, err)
-
-	build = build.WithMainSocketGroup(4)
-
-	calculator := &Calculator{PoB: build}
-	env := calculator.BuildOutput(OutputModeMain)
-
-	testza.AssertEqual(t, float64(24), env.Player.Output["TotalMin"])
-	testza.AssertEqual(t, float64(36), env.Player.Output["TotalMax"])
-	testza.AssertEqual(t, 30.9, env.Player.Output["AverageHit"])
-	testza.AssertEqual(t, 30.9, env.Player.Output["AverageDamage"])
-	testza.AssertEqual(t, 41.199999999999996, env.Player.Output["TotalDPS"])
+func assertNestedMapEqual[M ~map[K]map[L]V, K, L comparable, V any](t *testing.T, expected, got M) {
+	for k := range expected {
+		assertMapEqual(t, expected[k], got[k])
+	}
 }
 
-func TestFireballLevel20AddedColdLevel1(t *testing.T) {
-	file, err := os.ReadFile("../testdata/builds/Fireball.xml")
-	testza.AssertNoError(t, err)
+func TestOutput(t *testing.T) {
+	tc := []testdata{
+		{
+			name:      "Fireball",
+			buildData: "../testdata/builds/Fireball.xml",
+			baseDamage: map[OutTable]map[string]float64{
+				OutTableMainHand: {
+					"TotalMin":      0.9523809523809523,
+					"TotalMax":      2.8571428571428568,
+					"AverageHit":    1.9047619047619047,
+					"AverageDamage": 1.8857142857142855,
+					"TotalDPS":      2.2628571428571425,
+				},
+			},
+			skillDamage: []skillGroup{
+				{
+					name:        "Fireball level 1",
+					socketGroup: 2,
+					damage: map[string]float64{
+						"TotalMin":      9,
+						"TotalMax":      14,
+						"AverageHit":    11.844999999999999,
+						"AverageDamage": 11.845,
+						"TotalDPS":      15.793333333333333,
+					},
+				},
+				{
+					name:        "Fireball level 20",
+					socketGroup: 3,
+					damage: map[string]float64{
+						"TotalMin":      1640,
+						"TotalMax":      2460,
+						"AverageHit":    2111.5,
+						"AverageDamage": 2111.5,
+						"TotalDPS":      2815.333333333333,
+					},
+				},
+				{
+					name:        "Fireball level 1 Added Cold level 1",
+					socketGroup: 4,
+					damage: map[string]float64{
+						"TotalMin":      24,
+						"TotalMax":      36,
+						"AverageHit":    30.9,
+						"AverageDamage": 30.9,
+						"TotalDPS":      41.199999999999996,
+					},
+				},
+				{
+					name:        "Fireball level 20 Added Cold level 1",
+					socketGroup: 5,
+					damage: map[string]float64{
+						"TotalMin":      1655,
+						"TotalMax":      2482,
+						"AverageHit":    2130.555,
+						"AverageDamage": 2130.555,
+						"TotalDPS":      2840.74,
+					},
+				},
+				{
+					name:        "Fireball level 20 Added Cold level 20",
+					socketGroup: 6,
+					damage: map[string]float64{
+						"TotalMin":      2202,
+						"TotalMax":      3304,
+						"AverageHit":    2835.5899999999997,
+						"AverageDamage": 2835.5899999999992,
+						"TotalDPS":      3780.7866666666655,
+					},
+				},
+			},
+		},
+	}
 
-	build, err := builds.ParseBuild(file)
-	testza.AssertNoError(t, err)
+	for _, test := range tc {
+		t.Run(test.name, func(t *testing.T) {
+			d, err := os.ReadFile("../testdata/builds/Fireball.xml")
+			if err != nil {
+				t.Fatal(err)
+			}
+			build, err := builds.ParseBuild(d)
+			if err != nil {
+				t.Fatal(err)
+			}
 
-	build = build.WithMainSocketGroup(5)
+			// Test without skills
+			if test.baseDamage != nil {
+				skills := build.Skills.SkillSets
+				build.Skills.SkillSets = []pob.SkillSet{}
+				env := NewCalculator(*build).BuildOutput(OutputModeMain)
+				assertNestedMapEqual(t, test.baseDamage, env.Player.OutputTable)
+				build.Skills.SkillSets = skills
+			}
 
-	calculator := &Calculator{PoB: build}
-	env := calculator.BuildOutput(OutputModeMain)
-
-	testza.AssertEqual(t, float64(1655), env.Player.Output["TotalMin"])
-	testza.AssertEqual(t, float64(2482), env.Player.Output["TotalMax"])
-	testza.AssertEqual(t, 2130.555, env.Player.Output["AverageHit"])
-	testza.AssertEqual(t, 2130.555, env.Player.Output["AverageDamage"])
-	testza.AssertEqual(t, 2840.74, env.Player.Output["TotalDPS"])
-}
-
-func TestFireballLevel20AddedColdLevel20(t *testing.T) {
-	file, err := os.ReadFile("../testdata/builds/Fireball.xml")
-	testza.AssertNoError(t, err)
-
-	build, err := builds.ParseBuild(file)
-	testza.AssertNoError(t, err)
-
-	build = build.WithMainSocketGroup(6)
-
-	calculator := &Calculator{PoB: build}
-	env := calculator.BuildOutput(OutputModeMain)
-
-	testza.AssertEqual(t, float64(2202), env.Player.Output["TotalMin"])
-	testza.AssertEqual(t, float64(3304), env.Player.Output["TotalMax"])
-	testza.AssertEqual(t, 2835.5899999999997, env.Player.Output["AverageHit"])
-	testza.AssertEqual(t, 2835.5899999999992, env.Player.Output["AverageDamage"])
-	testza.AssertEqual(t, 3780.7866666666655, env.Player.Output["TotalDPS"])
+			for _, sg := range test.skillDamage {
+				t.Run(sg.name, func(t *testing.T) {
+					sgbuild := build.WithMainSocketGroup(sg.socketGroup)
+					env := NewCalculator(*sgbuild).BuildOutput(OutputModeMain)
+					assertMapEqual(t, sg.damage, env.Player.Output)
+				})
+			}
+		})
+	}
 }
