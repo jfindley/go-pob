@@ -1,15 +1,9 @@
 name: release
 
-# Release on every push for now
-#on:
-#  push:
-#    tags:
-#      - v*
-
-on: [push, pull_request]
-
-env:
-  NODE_VERSION: "22.8.0"
+on:
+  push:
+    branches:
+      - main
 
 jobs:
   release:
@@ -26,7 +20,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version-file: .node-version
 
       - name: Enable corepack
         run: corepack enable

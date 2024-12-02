@@ -1,0 +1,107 @@
+version: '3'
+
+interval: 250ms
+
+tasks:
+  build-go:
+    desc: "Build Go WASM binary and place it in the frontend"
+    env:
+      GOOS: js
+      GOARCH: wasm
+    cmds:
+      - go build -ldflags="-s -w" -v -o frontend/static/go-pob.wasm ./wasm
+    generates:
+      - frontend/static/go-pob.wasm
+
+  build-frontend:
+    desc: "Build JS frontend"
+    dir: ./frontend/
+    cmds:
+      - pnpm install
+      - pnpm run build
+
+  generate-typings:
+    desc: "Generate JS typings"
+    cmds:
+      - go run tools.go types
+
+  generate:
+    desc: "Run all generate commands"
+    deps:
+      - generate-typings
+
+  build:
+    desc: "Build everything"
+    cmds:
+      - task: build-go
+      - task: build-frontend
+
+  dev-frontend:
+    desc: "Frontend dev command (live updates)"
+    dir: ./frontend/
+    cmds:
+      - pnpm install
+      - pnpm run dev --clearScreen false
+
+  dev-go:
+    desc: "Go WASM dev command (live updates)"
+    watch: true
+    sources:
+      - '**/*.go'
+      - exclude: '.devbox/**/*.go'
+    cmds:
+      - task: build-go
+      - task: generate-typings
+    generates:
+      - frontend/static/go-pob.wasm
+
+  test-go:
+    desc: "Run all Go tests"
+    cmds:
+      - go test -v ./...
+
+  test:
+    desc: "Run all tests"
+    cmds:
+      - task: test-go
+
+  lint-go:
+    desc: "Lint all Go code"
+    cmds:
+      - golangci-lint run
+
+  lint-frontend:
+    desc: "Lint frontend"
+    dir: ./frontend/
+    cmds:
+      - pnpm run lint
+
+  lint:
+    desc: "Lint everything"
+    cmds:
+      - task: lint-go
+      - task: lint-frontend
+
+  format-go:
+    desc: "Format all Go code"
+    cmds:
+      - golangci-lint run --fix
+
+  format-frontend:
+    desc: "Format frontend"
+    dir: ./frontend/
+    cmds:
+      - pnpm run format
+
+  format:
+    desc: "Format everything"
+    cmds:
+      - task: format-go
+      - task: format-frontend
+
+  pre-commit:
+    desc: "Convenience script that should be run before committing"
+    cmds:
+      - task: generate
+      - task: format
+      - task: lint

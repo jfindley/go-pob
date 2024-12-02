@@ -4,9 +4,6 @@ permissions: read-all
 
 on: [push, pull_request]
 
-env:
-  NODE_VERSION: "22.8.0"
-
 jobs:
   lint-backend:
     name: Lint Backend
@@ -35,7 +32,7 @@ jobs:
       - name: Setup nodejs
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version-file: .node-version
 
       - name: Enable corepack
         run: corepack enable
@@ -80,7 +77,7 @@ jobs:
       - name: Setup nodejs
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version-file: .node-version
 
       - name: Enable corepack
         run: corepack enable
@@ -130,7 +127,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version-file: .node-version
 
       - name: Test
         run: ./.github/wasm_test.sh
