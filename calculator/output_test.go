@@ -37,11 +37,17 @@ type skillGroup struct {
 	damage      map[string]float64
 }
 
-func checkDamage[K comparable, V any](t *testing.T, expected, got map[K]V) bool {
+// These two functions check for partial map equality - only keys present in the expected param will be checked.
+func assertMapEqual[M ~map[K]V, K comparable, V any](t *testing.T, expected, got M) {
 	for calc, want := range expected {
 		testza.AssertEqual(t, got[calc], want)
 	}
-	return true
+}
+
+func assertNestedMapEqual[M ~map[K]map[L]V, K, L comparable, V any](t *testing.T, expected, got M) {
+	for k := range expected {
+		assertMapEqual(t, expected[k], got[k])
+	}
 }
 
 func TestOutput(t *testing.T) {
@@ -134,9 +140,7 @@ func TestOutput(t *testing.T) {
 				skills := build.Skills.SkillSets
 				build.Skills.SkillSets = []pob.SkillSet{}
 				env := NewCalculator(*build).BuildOutput(OutputModeMain)
-				for weapon := range test.baseDamage {
-					checkDamage(t, test.baseDamage[weapon], env.Player.OutputTable[weapon])
-				}
+				assertNestedMapEqual(t, test.baseDamage, env.Player.OutputTable)
 				build.Skills.SkillSets = skills
 			}
 
@@ -144,7 +148,7 @@ func TestOutput(t *testing.T) {
 				t.Run(sg.name, func(t *testing.T) {
 					sgbuild := build.WithMainSocketGroup(sg.socketGroup)
 					env := NewCalculator(*sgbuild).BuildOutput(OutputModeMain)
-					checkDamage(t, sg.damage, env.Player.Output)
+					assertMapEqual(t, sg.damage, env.Player.Output)
 				})
 			}
 		})
