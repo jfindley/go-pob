@@ -4,10 +4,11 @@ on:
   push:
     branches:
       - main
+      - dev
 
 jobs:
-  release:
-    name: Release
+  release-gh:
+    name: Release on Github
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
@@ -49,3 +50,45 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./frontend/build
           exclude_assets: ''
+
+  release-cf:
+    name: Release on CF
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+
+      - name: Enable corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: pnpm i
+        working-directory: frontend
+
+      - name: Build wasm
+        run: go build -ldflags="-s -w" -v -o frontend/static/go-pob.wasm ./wasm
+        env:
+          GOOS: js
+          GOARCH: wasm
+
+      - name: Build frontend
+        working-directory: frontend
+        run: |
+          pnpm run build
+          ls -lah build
+
+      - name: Deploy
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy ./frontend/build --project-name=pob --branch=main

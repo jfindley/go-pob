@@ -7,8 +7,8 @@ export const skillTreeVersion = writable<string | undefined>(undefined);
 
 let loadedSkillTree: Tree;
 
-export const drawnGroups: Record<number, Group> = {};
-export const drawnNodes: Record<number, Node> = {};
+export const drawnGroups: Map<number, Group> = new Map();
+export const drawnNodes: Map<number, Node> = new Map();
 
 export const ascendancyGroups: Record<number, string> = {};
 export const ascendancyStartGroups = new Set<number>();
@@ -61,10 +61,10 @@ export const loadSkillTree = async (version: string) => {
   Object.keys(loadedSkillTree.groups).forEach((groupId) => {
     const group = loadedSkillTree.groups[groupId];
     const nGroupId = parseInt(groupId);
-    drawnGroups[nGroupId] = group;
+    drawnGroups.set(nGroupId, group);
     group.nodes?.forEach((nodeId) => {
       const node = loadedSkillTree.nodes[nodeId];
-      drawnNodes[parseInt(nodeId)] = node;
+      drawnNodes.set(parseInt(nodeId), node);
 
       if (node.classStartIndex !== undefined) {
         classStartGroups[nGroupId] = node.classStartIndex;

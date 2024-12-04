@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Canvas, Layer, type Render } from 'svelte-canvas';
-  import type { Coord, Group, Node, Sprite } from '../skill_tree/types';
+  import type { Coord, Node, Sprite, Tree } from '../skill_tree/types';
   import {
     calculateNodePos,
     distance,
@@ -9,10 +9,8 @@
     inverseSpritesInactive,
     inverseSpritesActive,
     orbitAngleAt,
-    skillTree,
     toCanvasCoords,
     inverseSpritesOther,
-    skillTreeVersion,
     ascendancyGroups,
     ascendancyStartGroups,
     classStartGroups,
@@ -26,6 +24,14 @@
   import { get, writable } from 'svelte/store';
   import { logError } from '$lib/utils';
 
+  interface Props {
+    skillTree: Tree;
+    skillTreeVersion: string;
+    children?: import('svelte').Snippet;
+  }
+
+  let { skillTree, skillTreeVersion, children }: Props = $props();
+
   let currentClass: string | undefined = $state();
   $effect(() => {
     $currentBuild?.Build.ClassName.then((newClass) => (currentClass = newClass)).catch(logError);
@@ -36,12 +42,31 @@
     $currentBuild?.Build.AscendClassName.then((newAscendancy) => (currentAscendancy = newAscendancy)).catch(logError);
   });
 
-  interface Props {
-    clickNode?: (node: Node) => void;
-    children?: import('svelte').Snippet;
-  }
+  let activeNodes: number[] | undefined;
+  $effect(() => {
+    $currentBuild?.Build?.PassiveNodes?.then((newNodes) => (activeNodes = newNodes)).catch(logError);
+  });
 
-  let { clickNode = console.log, children }: Props = $props();
+  let clickNode = (node: Node) => {
+    const nodeId = node.skill ?? -1;
+    if (activeNodes?.includes(nodeId)) {
+      void syncWrap?.DeallocateNodes(nodeId);
+      currentBuild.set($currentBuild);
+    } else {
+      // TODO: Needs support for ascendancies or any other disconnect groups
+      const rootNodes = classStartNodes[skillTree.classes.findIndex((c) => c.name === currentClass)];
+      void syncWrap?.CalculateTreePath(skillTreeVersion || '3_18', [...rootNodes, ...(activeNodes ?? [])], nodeId).then((pathData) => {
+        if (!pathData) {
+          return;
+        }
+
+        // The first in the path is always an already allocated node
+        const isRootInPath = rootNodes.includes(pathData[0]);
+        void syncWrap?.AllocateNodes(isRootInPath ? pathData : pathData.slice(1));
+        currentBuild.set($currentBuild);
+      });
+    }
+  };
 
   const titleFont = '25px Roboto Flex';
   const statsFont = '17px Roboto Flex';
@@ -53,20 +78,24 @@
 
   const drawScaling = 2.6;
 
-  let cdnBase = $derived(`https://go-pob-data.pages.dev/data/${($skillTreeVersion || '3_18').replace('_', '.')}`);
+  let cdnBase = $derived(`https://go-pob-data.pages.dev/data/${(skillTreeVersion || '3_18').replace('_', '.')}`);
   let cdnTreeBase = $derived(cdnBase + `/tree/assets/`);
 
   const spriteCache: Record<string, HTMLImageElement> = {};
   const cropCache: Record<string, HTMLCanvasElement> = {};
   const drawSprite = (
     context: CanvasRenderingContext2D,
-    path: string,
+    path: string | undefined,
     pos: Point,
     source: Record<string, Sprite>,
     mirror = false,
     cropCircle = false,
     active = false
   ) => {
+    if (!path) {
+      return;
+    }
+
     const sprite = source[path];
     if (!sprite) {
       return;
@@ -96,7 +125,8 @@
     }
 
     if (cropCircle && spriteCache[spriteSheetUrl].complete) {
-      const cacheKey = spriteSheetUrl + ':' + path + ';' + (active ? 'active' : '');
+      const cacheKey = spriteSheetUrl + ':' + path + '--' + (active ? 'active' : 'inactive');
+
       if (!(cacheKey in cropCache)) {
         const tempCanvas = document.createElement('canvas');
         const tempCtx = tempCanvas.getContext('2d')!;
@@ -170,7 +200,7 @@
   const render: Render = ({ context, width, height }) => {
     const start = window.performance.now();
 
-    if (!$skillTree) {
+    if (!skillTree) {
       return;
     }
 
@@ -180,9 +210,9 @@
     context.fillRect(0, 0, width, height);
 
     if (currentClass) {
-      const classIndex = $skillTree.classes.findIndex((c) => c.name === currentClass);
-      if (classIndex in $skillTree.extraImages) {
-        const img = $skillTree.extraImages[classIndex];
+      const classIndex = skillTree.classes.findIndex((c) => c.name === currentClass);
+      if (classIndex in skillTree.extraImages) {
+        const img = skillTree.extraImages[classIndex];
 
         if (!(img.image in extraCache)) {
           extraCache[img.image] = new Image();
@@ -201,31 +231,29 @@
     }
 
     const connected: Record<string, boolean> = {};
-    Object.keys(drawnGroups).forEach((groupId) => {
-      const nGroupId = parseInt(groupId);
+    for (const [groupId, group] of drawnGroups) {
+      const posX = ((groupId in ascendancyGroups && ascendancyGroupPositionOffsets[ascendancyGroups[groupId]]?.x) || 0) + group.x;
+      const posY = ((groupId in ascendancyGroups && ascendancyGroupPositionOffsets[ascendancyGroups[groupId]]?.y) || 0) + group.y;
 
-      const group: Group = drawnGroups[nGroupId];
-      const posX = ((nGroupId in ascendancyGroups && ascendancyGroupPositionOffsets[ascendancyGroups[nGroupId]]?.x) || 0) + group.x;
-      const posY = ((nGroupId in ascendancyGroups && ascendancyGroupPositionOffsets[ascendancyGroups[nGroupId]]?.y) || 0) + group.y;
       const groupPos = toCanvasCoords(posX, posY, offsetX, offsetY, scaling);
 
       const maxOrbit = Math.max(...group.orbits);
-      if (nGroupId in classStartGroups) {
-        if (currentClass === $skillTree.classes[classStartGroups[nGroupId]].name) {
-          drawSprite(context, 'center' + $skillTree.classes[classStartGroups[nGroupId]].name.toLowerCase(), groupPos, inverseSpritesOther);
+      if (groupId in classStartGroups) {
+        if (currentClass === skillTree.classes[classStartGroups[groupId]].name) {
+          drawSprite(context, 'center' + skillTree.classes[classStartGroups[groupId]].name.toLowerCase(), groupPos, inverseSpritesOther);
         } else {
           drawSprite(context, 'PSStartNodeBackgroundInactive', groupPos, inverseSpritesOther, false, true);
         }
-      } else if (nGroupId in ascendancyGroups) {
-        if (ascendancyStartGroups.has(nGroupId)) {
+      } else if (groupId in ascendancyGroups) {
+        if (ascendancyStartGroups.has(groupId)) {
           drawSprite(
             context,
-            'Classes' + ascendancyGroups[nGroupId],
+            'Classes' + ascendancyGroups[groupId],
             groupPos,
             inverseSpritesOther,
             false,
             true,
-            currentAscendancy === ascendancyGroups[nGroupId]
+            currentAscendancy === ascendancyGroups[groupId]
           );
         }
       } else if (maxOrbit == 1) {
@@ -235,64 +263,46 @@
       } else if (maxOrbit == 3 || group.orbits.length > 1) {
         drawSprite(context, 'PSGroupBackground3', groupPos, inverseSpritesOther, true);
       }
-    });
+    }
 
-    Object.keys(drawnNodes).forEach((nodeId) => {
-      const nNodeId = parseInt(nodeId);
-
-      const node: Node = drawnNodes[nNodeId];
-      const angle = orbitAngleAt(node.orbit!, node.orbitIndex!);
-      const rotatedPos = calculateNodePos(node, offsetX, offsetY, scaling);
-
+    // Render connections between nodes
+    for (const [nodeId, node] of drawnNodes) {
       // Do not draw connections out of class starting nodes
-      if (node.classStartIndex !== undefined) {
-        return;
+      if (node.classStartIndex !== undefined || !node.out || node.group === undefined || node.orbit === undefined) {
+        continue;
       }
 
-      const sourceActive = $hoverPath.indexOf(node.skill!) >= 0;
-
-      node.out?.forEach((o) => {
-        if (!drawnNodes[parseInt(o)]) {
-          return;
+      for (const o of node.out) {
+        const otherNodeId = parseInt(o);
+        if (!drawnNodes.has(otherNodeId)) {
+          continue;
         }
 
-        const min = Math.min(parseInt(o), parseInt(nodeId));
-        const max = Math.max(parseInt(o), parseInt(nodeId));
+        const min = Math.min(otherNodeId, nodeId);
+        const max = Math.max(otherNodeId, nodeId);
         const joined = min + ':' + max;
 
         if (joined in connected) {
-          return;
+          continue;
         }
         connected[joined] = true;
 
-        const targetNode = drawnNodes[parseInt(o)];
-
-        // Do not draw connections to mastery nodes
-        if (targetNode.isMastery) {
-          return;
+        const targetNode = drawnNodes.get(otherNodeId);
+        // Do not draw connections to mastery nodes, ascendancy trees from main tree, or class starting nodes.
+        if (!targetNode || targetNode.isMastery || node.ascendancyName !== targetNode.ascendancyName || targetNode.classStartIndex !== undefined) {
+          continue;
         }
-
-        // Do not draw connections to ascendancy trees from main tree
-        if (node.ascendancyName !== targetNode.ascendancyName) {
-          return;
-        }
-
-        // Do not draw connections to class starting nodes
-        if (targetNode.classStartIndex !== undefined) {
-          return;
-        }
-
-        const targetAngle = orbitAngleAt(targetNode.orbit!, targetNode.orbitIndex!);
-        const targetRotatedPos = calculateNodePos(targetNode, offsetX, offsetY, scaling);
 
         context.beginPath();
 
         if (node.group != targetNode.group || node.orbit != targetNode.orbit) {
+          const rotatedPos = calculateNodePos(node, offsetX, offsetY, scaling);
+          const targetRotatedPos = calculateNodePos(targetNode, offsetX, offsetY, scaling);
           context.moveTo(rotatedPos.x, rotatedPos.y);
           context.lineTo(targetRotatedPos.x, targetRotatedPos.y);
         } else {
-          let a = Math.PI / 180 - (Math.PI / 180) * angle;
-          let b = Math.PI / 180 - (Math.PI / 180) * targetAngle;
+          let a = Math.PI / 180 - (Math.PI / 180) * orbitAngleAt(node.orbit, node.orbitIndex!);
+          let b = Math.PI / 180 - (Math.PI / 180) * orbitAngleAt(targetNode.orbit, targetNode.orbitIndex!);
 
           a -= Math.PI / 2;
           b -= Math.PI / 2;
@@ -302,30 +312,35 @@
           const finalA = diff > Math.PI ? Math.max(a, b) : Math.min(a, b);
           const finalB = diff > Math.PI ? Math.min(a, b) : Math.max(a, b);
 
-          const group = drawnGroups[node.group!];
+          const group = drawnGroups.get(node.group);
+          if (group === undefined) {
+            continue;
+          }
+
           const posX = ((node.ascendancyName && ascendancyGroupPositionOffsets[node.ascendancyName]?.x) || 0) + group.x;
           const posY = ((node.ascendancyName && ascendancyGroupPositionOffsets[node.ascendancyName]?.y) || 0) + group.y;
           const groupPos = toCanvasCoords(posX, posY, offsetX, offsetY, scaling);
-          context.arc(groupPos.x, groupPos.y, $skillTree.constants.orbitRadii[node.orbit!] / scaling + 1, finalA, finalB);
+          context.arc(groupPos.x, groupPos.y, skillTree.constants.orbitRadii[node.orbit] / scaling + 1, finalA, finalB);
         }
 
-        if (sourceActive && $hoverPath.indexOf(targetNode.skill!) >= 0) {
+        let lineWidth = 6;
+        if (activeNodes?.includes(nodeId) && activeNodes?.includes(otherNodeId)) {
+          context.strokeStyle = `#e9deb6`;
+          lineWidth = 12;
+        } else if ($hoverPath.includes(nodeId) && $hoverPath.includes(otherNodeId)) {
           context.strokeStyle = `#c89c01`;
         } else {
           context.strokeStyle = `#524518`;
         }
 
-        context.lineWidth = 6 / scaling;
+        context.lineWidth = lineWidth / scaling;
         context.stroke();
-      });
-    });
+      }
+    }
 
     // let hoveredNodeActive = false;
     let newHoverNode: Node | undefined;
-    Object.keys(drawnNodes).forEach((nodeId) => {
-      const nNodeId = parseInt(nodeId);
-
-      const node: Node = drawnNodes[nNodeId];
+    for (const [nodeId, node] of drawnNodes) {
       const rotatedPos = calculateNodePos(node, offsetX, offsetY, scaling);
       let touchDistance = 0;
 
@@ -350,7 +365,7 @@
         // hoveredNodeActive = active;
       }
 
-      const active = false; // TODO Actually check if node is active
+      const active = activeNodes?.includes(nodeId); // TODO Actually check if node is active
       const highlighted = $hoverPath.indexOf(node.skill!) >= 0 || newHoverNode === node;
 
       if (node.classStartIndex !== undefined) {
@@ -358,14 +373,14 @@
       } else if (node.isAscendancyStart) {
         drawSprite(context, 'AscendancyMiddle', rotatedPos, inverseSpritesOther);
       } else if (node.isKeystone) {
-        drawSprite(context, node.icon!, rotatedPos, active ? inverseSpritesActive : inverseSpritesInactive);
+        drawSprite(context, node.icon, rotatedPos, active ? inverseSpritesActive : inverseSpritesInactive);
         if (active || highlighted) {
           drawSprite(context, 'KeystoneFrameAllocated', rotatedPos, inverseSpritesOther);
         } else {
           drawSprite(context, 'KeystoneFrameUnallocated', rotatedPos, inverseSpritesOther);
         }
       } else if (node.isNotable) {
-        drawSprite(context, node.icon!, rotatedPos, active ? inverseSpritesActive : inverseSpritesInactive);
+        drawSprite(context, node.icon, rotatedPos, active ? inverseSpritesActive : inverseSpritesInactive);
 
         if (node.ascendancyName) {
           if (active || highlighted) {
@@ -396,12 +411,12 @@
         }
       } else if (node.isMastery) {
         if (active || highlighted) {
-          drawSprite(context, node.activeIcon!, rotatedPos, inverseSpritesActive);
+          drawSprite(context, node.activeIcon, rotatedPos, inverseSpritesActive);
         } else {
-          drawSprite(context, node.inactiveIcon!, rotatedPos, inverseSpritesInactive);
+          drawSprite(context, node.inactiveIcon, rotatedPos, inverseSpritesInactive);
         }
       } else {
-        drawSprite(context, node.icon!, rotatedPos, active ? inverseSpritesActive : inverseSpritesInactive);
+        drawSprite(context, node.icon, rotatedPos, active ? inverseSpritesActive : inverseSpritesInactive);
 
         if (node.ascendancyName) {
           if (active || highlighted) {
@@ -417,15 +432,15 @@
           }
         }
       }
-    });
+    }
 
     if (get(hoveredNode) != newHoverNode) {
       hoveredNode.set(newHoverNode);
       if (newHoverNode !== undefined && currentClass) {
-        const rootNodes = classStartNodes[$skillTree.classes.findIndex((c) => c.name === currentClass)];
+        const rootNodes = classStartNodes[skillTree.classes.findIndex((c) => c.name === currentClass)];
         const target = newHoverNode.skill!;
         syncWrap
-          .CalculateTreePath($skillTreeVersion || '3_18', rootNodes, target)
+          .CalculateTreePath(skillTreeVersion || '3_18', [...rootNodes, ...(activeNodes ?? [])], target)
           .then((data) => {
             if (data) {
               hoverPath.set(data);
@@ -446,7 +461,7 @@
       }));
 
       context.font = titleFont;
-      const textMetrics = context.measureText(nodeName);
+      const textMetrics = context.measureText(nodeName ?? '');
 
       const maxWidth = Math.max(textMetrics.width + 50, 600);
 
@@ -502,7 +517,7 @@
       context.fillStyle = '#ffffff';
       context.font = titleFont;
       context.textAlign = 'center';
-      context.fillText(nodeName, mousePos.x + maxWidth / 2, mousePos.y + 35);
+      context.fillText(nodeName ?? '', mousePos.x + maxWidth / 2, mousePos.y + 35);
 
       context.fillStyle = 'rgba(0,0,0,0.8)';
       context.fillRect(mousePos.x, mousePos.y + titleHeight, maxWidth, offset - titleHeight);
@@ -616,10 +631,10 @@
 
   let initialized = $state(false);
   $effect(() => {
-    if (!initialized && $skillTree) {
+    if (!initialized && skillTree) {
       initialized = true;
-      offsetX = $skillTree.min_x + (window.innerWidth / 2) * scaling;
-      offsetY = $skillTree.min_y + (window.innerHeight / 2) * scaling;
+      offsetX = skillTree.min_x + (window.innerWidth / 2) * scaling;
+      offsetY = skillTree.min_y + (window.innerHeight / 2) * scaling;
     }
     resize();
   });

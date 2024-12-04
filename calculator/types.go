@@ -35,6 +35,7 @@ const (
 )
 
 type Environment struct {
+	Cache *EnvironmentCache
 	Build *pob.PathOfBuilding
 	Mode  OutputMode
 	Spec  *PassiveSpec
@@ -60,6 +61,7 @@ type Environment struct {
 	Flasks              map[string]interface{} // TODO Implement
 
 	GrantedPassives map[string]interface{} // TODO Implement
+	AllocatedNodes  map[string]data.Node
 
 	AuxSkillList map[string]interface{} // TODO Implement
 
@@ -69,6 +71,13 @@ type Environment struct {
 
 	KeystonesAdded  map[string]interface{}
 	MainSocketGroup int
+
+	DebugErrors []string
+}
+
+type EnvironmentCache struct {
+	TreeVersion  data.TreeVersion
+	modsForNodes map[string]ModList // Mods for all nodes cached after being parsed
 }
 
 type Actor struct {

@@ -1,6 +1,8 @@
 package calculator
 
-import "github.com/Vilsol/go-pob/mod"
+import (
+	"github.com/Vilsol/go-pob/mod"
+)
 
 func FLAG(modName string) mod.Mod {
 	return MOD(modName, mod.TypeFlag, true)

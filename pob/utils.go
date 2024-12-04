@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io"
+	"slices"
 	"strings"
 )
 
@@ -46,4 +47,14 @@ func DecodeDecompress(code string) (string, error) {
 	}
 
 	return string(xml), nil
+}
+
+func removeValue[T comparable](s []T, v T) ([]T, error) {
+	var idx = slices.Index(s, v)
+	if idx == -1 {
+		return nil, fmt.Errorf("value %v was not found in slice", v)
+	}
+
+	s[idx] = s[len(s)-1]
+	return s[:len(s)-1], nil
 }

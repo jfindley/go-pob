@@ -1,6 +1,8 @@
 package pob
 
-import "strconv"
+import (
+	"strconv"
+)
 
 func (b *PathOfBuilding) WithMainSocketGroup(mainSocketGroup int) *PathOfBuilding {
 	out := *b
@@ -109,4 +111,15 @@ func (b *PathOfBuilding) SetAscendancy(ascendancy string) {
 
 func (b *PathOfBuilding) SetLevel(level int) {
 	b.Build.Level = level
+}
+
+func (b *PathOfBuilding) AllocateNodes(nodeIds []int64) {
+	b.Build.PassiveNodes = append(b.Build.PassiveNodes, nodeIds...)
+}
+
+func (b *PathOfBuilding) DeallocateNodes(nodeId int64) {
+	var newNodes, err = removeValue(b.Build.PassiveNodes, nodeId)
+	if err == nil {
+		b.Build.PassiveNodes = newNodes
+	}
 }
