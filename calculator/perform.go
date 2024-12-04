@@ -6,6 +6,7 @@ import (
 
 	"github.com/Vilsol/go-pob/data"
 	"github.com/Vilsol/go-pob/mod"
+	"github.com/Vilsol/go-pob/moddb"
 	"github.com/Vilsol/go-pob/utils"
 )
 
@@ -36,7 +37,7 @@ func PerformCalc(env *Environment) {
 	mergeKeystones(env)
 
 	for _, activeSkill := range env.Player.ActiveSkillList {
-		activeSkill.SkillModList = NewModList()
+		activeSkill.SkillModList = moddb.NewModList()
 		activeSkill.SkillModList.Parent = activeSkill.BaseSkillModList
 		if activeSkill.Minion != nil {
 			/*

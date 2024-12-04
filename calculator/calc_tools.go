@@ -7,6 +7,7 @@ import (
 	"github.com/Vilsol/go-pob-data/poe"
 
 	raw2 "github.com/Vilsol/go-pob/data/raw"
+	"github.com/Vilsol/go-pob/moddb"
 
 	"github.com/Vilsol/go-pob-data/raw"
 
@@ -15,11 +16,11 @@ import (
 	"github.com/Vilsol/go-pob/utils"
 )
 
-func CalcMod(list ModStoreFuncs, cfg *ListCfg, names ...string) float64 {
+func CalcMod(list moddb.ModStoreFuncs, cfg *moddb.ListCfg, names ...string) float64 {
 	return (1 + list.Sum(mod.TypeIncrease, cfg, names...)/100) * list.More(cfg, names...)
 }
 
-func CalcVal(modStore ModStoreFuncs, name string, cfg *ListCfg) float64 {
+func CalcVal(modStore moddb.ModStoreFuncs, name string, cfg *moddb.ListCfg) float64 {
 	baseVal := modStore.Sum(mod.TypeBase, cfg, name)
 	if baseVal != 0 {
 		return baseVal * CalcMod(modStore, cfg, name)

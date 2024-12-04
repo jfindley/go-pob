@@ -7,6 +7,7 @@ import (
 
 	"github.com/Vilsol/go-pob-data/poe"
 	"github.com/Vilsol/go-pob/cache"
+	"github.com/Vilsol/go-pob/moddb"
 
 	"github.com/MarvinJWendt/testza"
 
@@ -33,7 +34,7 @@ func TestEmptyEnv(t *testing.T) {
 
 	_, cachedPlayerDB, cachedEnemyDB, cachedMinionDB := InitEnv(build, testCache, OutputModeMain)
 
-	testza.AssertEqual(t, 101, len(cachedPlayerDB.(*ModDB).Mods))
-	testza.AssertEqual(t, 60, len(cachedEnemyDB.(*ModDB).Mods))
+	testza.AssertEqual(t, 101, len(cachedPlayerDB.(*moddb.ModDB).Mods))
+	testza.AssertEqual(t, 60, len(cachedEnemyDB.(*moddb.ModDB).Mods))
 	testza.AssertNil(t, cachedMinionDB)
 }

@@ -1,4 +1,4 @@
-package calculator
+package moddb
 
 import (
 	"math"
@@ -30,7 +30,6 @@ type ModStoreFuncs interface {
 type ModStore struct {
 	Parent      ModStoreFuncs
 	Child       ModStoreFuncs
-	Actor       *Actor `json:"-"`
 	Multipliers map[string]float64
 	Conditions  map[string]bool
 }
@@ -54,7 +53,6 @@ func (s *ModStore) Clone() *ModStore {
 	}
 
 	out := NewModStore(parent)
-	out.Actor = s.Actor
 	out.Multipliers = utils.CopyMap(out.Multipliers)
 	out.Conditions = utils.CopyMap(out.Conditions)
 	return out
@@ -566,10 +564,6 @@ func (s *ModStore) GetStat(stat string, cfg *ListCfg) float64 {
 			return self.actor.output["Mana"] * (math.ceil(reservedPercentBeforeEfficiency) / 100);
 		end
 	*/
-
-	if v, ok := s.Actor.Output[stat]; ok {
-		return v
-	}
 
 	if cfg != nil && cfg.SkillStats != nil {
 		if v, ok := cfg.SkillStats[stat]; ok {

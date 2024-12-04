@@ -8,11 +8,12 @@ import (
 
 	"github.com/Vilsol/go-pob/data"
 	"github.com/Vilsol/go-pob/mod"
+	"github.com/Vilsol/go-pob/moddb"
 	"github.com/Vilsol/go-pob/pob"
 	"github.com/Vilsol/go-pob/utils"
 )
 
-func InitEnv(build *pob.PathOfBuilding, envCache *EnvironmentCache, mode OutputMode) (*Environment, ModStoreFuncs, ModStoreFuncs, ModStoreFuncs) {
+func InitEnv(build *pob.PathOfBuilding, envCache *EnvironmentCache, mode OutputMode) (*Environment, moddb.ModStoreFuncs, moddb.ModStoreFuncs, moddb.ModStoreFuncs) {
 	env := &Environment{}
 	env.Cache = envCache
 
@@ -21,7 +22,7 @@ func InitEnv(build *pob.PathOfBuilding, envCache *EnvironmentCache, mode OutputM
 
 	// Clear Node Mod cache if tree has changed
 	if env.Cache.TreeVersion != currentTreeVersion {
-		env.Cache.modsForNodes = make(map[string]ModList, len(data.TreeVersions[currentTreeVersion].Tree().Nodes))
+		env.Cache.modsForNodes = make(map[string]moddb.ModList, len(data.TreeVersions[currentTreeVersion].Tree().Nodes))
 		env.Cache.TreeVersion = currentTreeVersion
 	}
 
@@ -30,9 +31,9 @@ func InitEnv(build *pob.PathOfBuilding, envCache *EnvironmentCache, mode OutputM
 	env.Mode = mode
 	env.Spec = NewPassiveSpec(build, data.LatestTreeVersion)
 
-	env.ModDB = NewModDB()
-	env.EnemyModDB = NewModDB()
-	env.ItemModDB = NewModDB()
+	env.ModDB = moddb.NewModDB()
+	env.EnemyModDB = moddb.NewModDB()
+	env.ItemModDB = moddb.NewModDB()
 
 	// TODO m_max(1, m_min(100, env.configInput.enemyLevel and env.configInput.enemyLevel or env.configPlaceholder["enemyLevel"] or m_min(env.build.characterLevel, data.misc.MaxEnemyLevel)))
 	env.EnemyLevel = 1
@@ -47,9 +48,6 @@ func InitEnv(build *pob.PathOfBuilding, envCache *EnvironmentCache, mode OutputM
 		ModDB: env.EnemyModDB,
 		Level: env.EnemyLevel,
 	}
-
-	env.ModDB.Actor = env.Player
-	env.EnemyModDB.Actor = env.Enemy
 
 	env.Player.Enemy = env.Enemy
 	env.Enemy.Enemy = env.Player
@@ -185,8 +183,8 @@ func InitEnv(build *pob.PathOfBuilding, envCache *EnvironmentCache, mode OutputM
 	env.EnemyModDB.AddMod(mod.NewFloat("Armour", mod.TypeBase, data.MonsterArmourTable[env.EnemyLevel]).Source("Base"))
 
 	// Add mods from the config tab
-	confModList := NewModList()
-	confEnemyModList := NewModList()
+	confModList := moddb.NewModList()
+	confEnemyModList := moddb.NewModList()
 	for _, input := range build.Config.Inputs {
 		if config, ok := configurations[input.Name]; ok {
 			var value interface{}
@@ -674,7 +672,7 @@ func InitEnv(build *pob.PathOfBuilding, envCache *EnvironmentCache, mode OutputM
 	*/
 
 	// Build list of active skills
-	groupCfg := &ListCfg{}
+	groupCfg := &moddb.ListCfg{}
 
 	// Below we re-order the socket group list in order to support modifiers introduced in 3.16
 	// which allow a Shield (Weapon 2) to link to a Main Hand and an Amulet to link to a Body Armour
@@ -1035,7 +1033,7 @@ func InitEnv(build *pob.PathOfBuilding, envCache *EnvironmentCache, mode OutputM
 	return env, cachedPlayerDB, cachedEnemyDB, cachedMinionDB
 }
 
-func initModDB(env *Environment, modDB *ModDB) {
+func initModDB(env *Environment, modDB *moddb.ModDB) {
 	modDB.AddMod(mod.NewFloat("FireResistMax", mod.TypeBase, 75).Source("Base"))
 	modDB.AddMod(mod.NewFloat("ColdResistMax", mod.TypeBase, 75).Source("Base"))
 	modDB.AddMod(mod.NewFloat("LightningResistMax", mod.TypeBase, 75).Source("Base"))
