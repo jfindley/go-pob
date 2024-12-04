@@ -64,7 +64,7 @@ func (s *ModStore) Clone() *ModStore {
 	return out
 }
 
-func (s *ModStore) evalMultiplier(m mod.Mod, cfg *ListCfg, tag *mod.MultiplierTag) interface{} {
+func (s *ModStore) evalMultiplier(m mod.Mod, cfg *ListCfg, tag *mod.MultiplierTag) *mod.ModValueMulti {
 	value := m.Value()
 
 	target := s
@@ -118,12 +118,12 @@ func (s *ModStore) evalMultiplier(m mod.Mod, cfg *ListCfg, tag *mod.MultiplierTa
 		}
 	}
 
-	if v, ok := value.(float64); ok {
-		out := v*mult + tag.TagBase
+	if value.Type() == mod.ModValueMultiTypeFloat {
+		out := value.Float()*mult + tag.TagBase
 		if limitTotal != nil {
 			out = min(out, *limitTotal)
 		}
-		value = out
+		value.ValueFloat = out
 	} else {
 		/*
 			TODO Non-number multiplier
@@ -144,7 +144,7 @@ func (s *ModStore) evalMultiplier(m mod.Mod, cfg *ListCfg, tag *mod.MultiplierTa
 	return value
 }
 
-func (s *ModStore) evalMultiplierThresholdTag(m mod.Mod, cfg *ListCfg, tag *mod.MultiplierThresholdTag) interface{} {
+func (s *ModStore) evalMultiplierThresholdTag(m mod.Mod, cfg *ListCfg, tag *mod.MultiplierThresholdTag) *mod.ModValueMulti {
 	value := m.Value()
 	target := s
 	/*
@@ -183,7 +183,7 @@ func (s *ModStore) evalMultiplierThresholdTag(m mod.Mod, cfg *ListCfg, tag *mod.
 	return value
 }
 
-func (s *ModStore) evalPerStatTag(m mod.Mod, cfg *ListCfg, tag *mod.PerStatTag) interface{} {
+func (s *ModStore) evalPerStatTag(m mod.Mod, cfg *ListCfg, tag *mod.PerStatTag) *mod.ModValueMulti {
 	value := m.Value()
 	base := float64(0)
 	target := s
@@ -219,12 +219,12 @@ func (s *ModStore) evalPerStatTag(m mod.Mod, cfg *ListCfg, tag *mod.PerStatTag) 
 		}
 	}
 
-	if v, ok := value.(float64); ok {
-		out := v*mult + tag.Base
+	if value.Type() == mod.ModValueMultiTypeFloat {
+		out := value.Float()*mult + tag.Base
 		if limitTotal != nil {
 			out = min(out, *limitTotal)
 		}
-		value = out
+		value.ValueFloat = out
 	} else {
 		/*
 			TODO Non-number multiplier
@@ -345,7 +345,7 @@ func (s *ModStore) evalPerStatTag(m mod.Mod, cfg *ListCfg, tag *mod.PerStatTag) 
 	return value
 }
 
-func (s *ModStore) evalConditionTag(m mod.Mod, cfg *ListCfg, tag *mod.ConditionTag) interface{} {
+func (s *ModStore) evalConditionTag(m mod.Mod, cfg *ListCfg, tag *mod.ConditionTag) *mod.ModValueMulti {
 	value := m.Value()
 	match := false
 	for _, v := range tag.VarList {
@@ -373,7 +373,7 @@ func (s *ModStore) evalConditionTag(m mod.Mod, cfg *ListCfg, tag *mod.ConditionT
 	return value
 }
 
-func (s *ModStore) evalActorConditionTag(m mod.Mod, cfg *ListCfg, tag *mod.ActorConditionTag) interface{} {
+func (s *ModStore) evalActorConditionTag(m mod.Mod, cfg *ListCfg, tag *mod.ActorConditionTag) *mod.ModValueMulti {
 	value := m.Value()
 	target := s
 
@@ -533,7 +533,7 @@ func (s *ModStore) evalActorConditionTag(m mod.Mod, cfg *ListCfg, tag *mod.Actor
 	return value
 }
 
-func (s *ModStore) evalMod(m mod.Mod, cfg *ListCfg) interface{} {
+func (s *ModStore) evalMod(m mod.Mod, cfg *ListCfg) *mod.ModValueMulti {
 	value := m.Value()
 
 	if len(m.Tags()) == 0 {
