@@ -98,8 +98,8 @@ func (m *ModList) Sum(modType mod.Type, cfg *ListCfg, names ...string) float64 {
 			(cfg == nil || cfg.Source == nil || *cfg.Source == mo.GetSource()) {
 
 			value := m.EvalMod(mo, cfg)
-			if value != nil {
-				result += value.(float64)
+			if value != nil && value.Type() == mod.ModValueMultiTypeFloat {
+				result += value.Float()
 			}
 		}
 	}
@@ -130,8 +130,8 @@ func (m *ModList) More(cfg *ListCfg, names ...string) float64 {
 			(cfg == nil || cfg.Source == nil || *cfg.Source == mo.GetSource()) {
 
 			value := m.EvalMod(mo, cfg)
-			if value != nil {
-				result = result * (1 + value.(float64)/100)
+			if value != nil && value.Type() == mod.ModValueMultiTypeFloat {
+				result = result * (1 + value.Float()/100)
 			}
 		}
 	}
@@ -160,7 +160,7 @@ func (m *ModList) Flag(cfg *ListCfg, names ...string) bool {
 			(cfg == nil || cfg.Source == nil || *cfg.Source == mo.GetSource()) {
 
 			value := m.EvalMod(mo, cfg)
-			if value != nil && value.(bool) {
+			if value != nil && value.Type() == mod.ModValueMultiTypeFlag {
 				return true
 			}
 		}

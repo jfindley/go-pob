@@ -103,11 +103,11 @@ func mergeLevelMod(modList *ModList, m mod.Mod, value float64) {
 
 	newMod := m.Clone()
 
-	switch cast := newMod.(type) {
-	case *mod.FloatMod:
-		cast.ModValue = value
-	case *mod.ListMod:
-		switch inner := cast.Value().(type) {
+	switch newMod.Value().Type() {
+	case mod.ModValueMultiTypeFloat:
+		newMod.Value().SetFloat(value)
+	case mod.ModValueMultiTypeList:
+		switch inner := newMod.Value().ValueList.(type) {
 		case *mod.SkillData:
 			inner.Value = value
 		}

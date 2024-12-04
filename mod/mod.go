@@ -11,7 +11,7 @@ type Mod interface {
 	KeywordFlags() KeywordFlag
 	GetSource() Source
 	Tags() []Tag
-	Value() interface{}
+	Value() *ModValueMulti
 	Clone() Mod
 	ClearTags()
 }

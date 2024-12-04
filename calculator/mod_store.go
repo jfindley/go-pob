@@ -60,7 +60,7 @@ func (s *ModStore) Clone() *ModStore {
 	return out
 }
 
-func (s *ModStore) EvalMod(m mod.Mod, cfg *ListCfg) interface{} {
+func (s *ModStore) EvalMod(m mod.Mod, cfg *ListCfg) *mod.ModValueMulti {
 	value := m.Value()
 
 	if len(m.Tags()) == 0 {
@@ -121,12 +121,11 @@ func (s *ModStore) EvalMod(m mod.Mod, cfg *ListCfg) interface{} {
 				}
 			}
 
-			if v, ok := value.(float64); ok {
-				out := v*mult + tag.TagBase
-				if limitTotal != nil {
-					out = min(out, *limitTotal)
+			if m.Value().Type() == mod.ModValueMultiTypeFloat {
+				value.ValueFloat = value.ValueFloat*mult + tag.TagBase
+				if limitTotal != nil && value.ValueFloat > *limitTotal {
+					value.ValueFloat = *limitTotal
 				}
-				value = out
 			} else {
 				/*
 					TODO Non-number multiplier
@@ -214,12 +213,11 @@ func (s *ModStore) EvalMod(m mod.Mod, cfg *ListCfg) interface{} {
 				}
 			}
 
-			if v, ok := value.(float64); ok {
-				out := v*mult + tag.Base
-				if limitTotal != nil {
-					out = min(out, *limitTotal)
+			if m.Value().Type() == mod.ModValueMultiTypeFloat {
+				value.ValueFloat = value.ValueFloat*mult + tag.Base
+				if limitTotal != nil && value.ValueFloat > *limitTotal {
+					value.ValueFloat = *limitTotal
 				}
-				value = out
 			} else {
 				/*
 					TODO Non-number multiplier
