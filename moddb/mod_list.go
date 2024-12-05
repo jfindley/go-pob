@@ -154,7 +154,7 @@ func (m *ModList) Flag(cfg *ListCfg, names ...string) bool {
 			continue
 		}
 
-		if mo.Type() == mod.TypeMore &&
+		if mo.Type() == mod.TypeFlag &&
 			(cfg == nil || cfg.Flags == nil || (*cfg.Flags)&mo.Flags() == mo.Flags()) &&
 			(cfg == nil || cfg.KeywordFlags == nil || mod.MatchKeywordFlags(*cfg.KeywordFlags, mo.KeywordFlags())) &&
 			(cfg == nil || cfg.Source == nil || *cfg.Source == mo.GetSource()) {
