@@ -49,6 +49,8 @@ func InitEnv(build *pob.PathOfBuilding, envCache *EnvironmentCache, mode OutputM
 		Level: env.EnemyLevel,
 	}
 
+	env.ModDB.Actor = env.Player
+	env.EnemyModDB.Actor = env.Enemy
 	env.Player.Enemy = env.Enemy
 	env.Enemy.Enemy = env.Player
 

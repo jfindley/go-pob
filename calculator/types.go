@@ -96,6 +96,11 @@ type Actor struct {
 	StrDmgBonus     float64
 }
 
+func (a *Actor) GetOutput(stat string) (float64, bool) {
+	v, ok := a.Output[stat]
+	return v, ok
+}
+
 // TODO Fix Name
 type SomeSource struct {
 	Type        string

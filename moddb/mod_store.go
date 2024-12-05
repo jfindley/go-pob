@@ -27,10 +27,14 @@ type ModStoreFuncs interface {
 	Clone() ModStoreFuncs
 }
 
+type Actor interface {
+	GetOutput(string) (float64, bool)
+}
+
 type ModStore struct {
 	Parent      ModStoreFuncs
 	Child       ModStoreFuncs
-	Actor       interface{} // TODO: Make this a non-empty interface.
+	Actor       Actor
 	Multipliers map[string]float64
 	Conditions  map[string]bool
 }
@@ -567,9 +571,9 @@ func (s *ModStore) GetStat(stat string, cfg *ListCfg) float64 {
 		end
 	*/
 
-	// if v, ok := s.Actor.Output[stat]; ok {
-	// 	return v
-	// }
+	if v, ok := s.Actor.GetOutput(stat); ok {
+		return v
+	}
 
 	if cfg != nil && cfg.SkillStats != nil {
 		if v, ok := cfg.SkillStats[stat]; ok {
