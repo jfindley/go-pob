@@ -1,10 +1,10 @@
 package moddb
 
 import (
+	"maps"
 	"math"
 
 	"github.com/Vilsol/go-pob/mod"
-	"github.com/Vilsol/go-pob/utils"
 )
 
 type ListCfg struct {
@@ -59,8 +59,8 @@ func (s *ModStore) Clone() *ModStore {
 
 	out := NewModStore(parent)
 	out.Actor = s.Actor
-	out.Multipliers = utils.CopyMap(out.Multipliers)
-	out.Conditions = utils.CopyMap(out.Conditions)
+	maps.Copy(out.Multipliers, s.Multipliers)
+	maps.Copy(out.Conditions, s.Conditions)
 	return out
 }
 
