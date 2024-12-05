@@ -5,6 +5,7 @@ import (
 	"github.com/Vilsol/go-pob/data"
 	raw2 "github.com/Vilsol/go-pob/data/raw"
 	"github.com/Vilsol/go-pob/mod"
+	"github.com/Vilsol/go-pob/moddb"
 	"github.com/Vilsol/go-pob/pob"
 	"github.com/Vilsol/go-pob/utils"
 )
@@ -67,7 +68,7 @@ func CreateActiveSkill(activeEffect *GemEffect, supportList []*GemEffect, actor 
 	return activeSkill
 }
 
-func CalcMergeSkillInstanceMods(env *Environment, modList *ModList, skillEffect *GemEffect, extraStats []interface{}) {
+func CalcMergeSkillInstanceMods(env *Environment, modList *moddb.ModList, skillEffect *GemEffect, extraStats []interface{}) {
 	CalcValidateGemLevel(skillEffect)
 
 	grantedEffect := skillEffect.GrantedEffect
@@ -95,7 +96,7 @@ func CalcMergeSkillInstanceMods(env *Environment, modList *ModList, skillEffect 
 }
 
 // mergeLevelMod Merges level modifier with given mod list
-func mergeLevelMod(modList *ModList, m mod.Mod, value float64) {
+func mergeLevelMod(modList *moddb.ModList, m mod.Mod, value float64) {
 	if value == 0 {
 		modList.AddMod(m)
 		return
@@ -361,7 +362,7 @@ func CalcBuildActiveSkillModList(env *Environment, activeSkill *ActiveSkill) {
 			effectiveRange = env.configInput.projectileDistance
 		end
 	*/
-	activeSkill.SkillCfg = &ListCfg{
+	activeSkill.SkillCfg = &moddb.ListCfg{
 		Flags:        utils.Ptr(skillModFlags | activeSkill.Weapon1Flags | activeSkill.Weapon2Flags),
 		KeywordFlags: utils.Ptr(skillKeywordFlags),
 		SkillCond:    make(map[string]bool),
@@ -382,7 +383,7 @@ func CalcBuildActiveSkillModList(env *Environment, activeSkill *ActiveSkill) {
 	if skillFlags[SkillFlagWeapon1Attack] {
 		cond := utils.CopyMap(activeSkill.SkillCfg.SkillCond)
 		cond["MainHandAttack"] = true
-		activeSkill.Weapon1Cfg = &ListCfg{
+		activeSkill.Weapon1Cfg = &moddb.ListCfg{
 			Flags:        utils.Ptr(skillModFlags | activeSkill.Weapon1Flags),
 			KeywordFlags: activeSkill.SkillCfg.KeywordFlags,
 			Source:       activeSkill.SkillCfg.Source,
@@ -394,7 +395,7 @@ func CalcBuildActiveSkillModList(env *Environment, activeSkill *ActiveSkill) {
 	if skillFlags[SkillFlagWeapon2Attack] {
 		cond := utils.CopyMap(activeSkill.SkillCfg.SkillCond)
 		cond["OffHandAttack"] = true
-		activeSkill.Weapon1Cfg = &ListCfg{
+		activeSkill.Weapon1Cfg = &moddb.ListCfg{
 			Flags:        utils.Ptr(skillModFlags | activeSkill.Weapon2Flags),
 			KeywordFlags: activeSkill.SkillCfg.KeywordFlags,
 			Source:       activeSkill.SkillCfg.Source,
@@ -404,7 +405,7 @@ func CalcBuildActiveSkillModList(env *Environment, activeSkill *ActiveSkill) {
 	}
 
 	// Initialise skill modifier list
-	skillModList := NewModList()
+	skillModList := moddb.NewModList()
 	skillModList.Parent = activeSkill.Actor.ModDB
 	activeSkill.SkillModList = skillModList
 	activeSkill.BaseSkillModList = skillModList

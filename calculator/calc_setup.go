@@ -5,9 +5,10 @@ import (
 	"strings"
 
 	"github.com/Vilsol/go-pob/data"
+	"github.com/Vilsol/go-pob/moddb"
 )
 
-func buildModListForNodeList(env *Environment, nodes map[string]data.Node) *ModList { // TODO ADD: finishJewels)
+func buildModListForNodeList(env *Environment, nodes map[string]data.Node) *moddb.ModList { // TODO ADD: finishJewels)
 	// Initialise radius jewels
 	/* *
 	for _, rad in pairs(env.radiusJewelList) do
@@ -17,7 +18,7 @@ func buildModListForNodeList(env *Environment, nodes map[string]data.Node) *ModL
 	/* */
 
 	// Add node modifiers
-	var modList = NewModList()
+	var modList = moddb.NewModList()
 	for nodeId, node := range nodes {
 		cachedModList, isCached := env.Cache.modsForNodes[nodeId]
 		if isCached {
@@ -63,8 +64,8 @@ func buildModListForNodeList(env *Environment, nodes map[string]data.Node) *ModL
 	return modList
 }
 
-func buildModListForNode(env *Environment, node data.Node) *ModList {
-	var modList = NewModList()
+func buildModListForNode(env *Environment, node data.Node) *moddb.ModList {
+	var modList = moddb.NewModList()
 	for i, stat := range node.Stats {
 		var mods, err = parseMod(stat, i)
 		if strings.Trim(err, " ") != "" {
