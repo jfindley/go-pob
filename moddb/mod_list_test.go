@@ -322,5 +322,57 @@ func TestFlag(t *testing.T) {
 			})
 		})
 	}
+}
 
+func TestOverride(t *testing.T) {
+	tc := []struct {
+		name        string
+		mods        []mod.Mod
+		cfg         *ListCfg
+		mappedNames []string
+		expected    any
+	}{
+		{
+			name:        "non-matching mod, empty modlist",
+			mods:        []mod.Mod{mod.NewFlag("testMod", true)},
+			mappedNames: []string{"testMod"},
+			expected:    nil,
+		},
+		{
+			name: "multiple mod types, keyword modlist",
+			mods: []mod.Mod{
+				mod.NewFloat("testMod0", mod.TypeIncrease, 10).KeywordFlag(mod.KeywordFlagCold),
+				mod.NewFloat("testMod1", mod.TypeIncrease, 20).KeywordFlag(mod.KeywordFlagFire),
+				mod.NewFloat("testMod2", mod.TypeOverride, 40).KeywordFlag(mod.KeywordFlagFire),
+			},
+			cfg: &ListCfg{
+				KeywordFlags: utils.Ptr(mod.KeywordFlagFire),
+			},
+			mappedNames: []string{
+				"testMod0", "testMod1", "testMod2",
+			},
+			expected: float64(40),
+		},
+	}
+
+	for _, test := range tc {
+		t.Run(test.name, func(t *testing.T) {
+			m := NewModList()
+			for _, tm := range test.mods {
+				m.AddMod(tm)
+			}
+			got := m.Override(test.cfg, test.mappedNames...)
+			testza.AssertEqual(t, test.expected, got)
+			t.Run(test.name+"-parent", func(t *testing.T) {
+				p := NewModList()
+				for _, tm := range test.mods {
+					p.AddMod(tm)
+				}
+				m := NewModList()
+				m.Parent = p
+				got := m.Override(test.cfg, test.mappedNames...)
+				testza.AssertEqual(t, test.expected, got)
+			})
+		})
+	}
 }
