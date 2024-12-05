@@ -64,7 +64,7 @@ func (s *ModStore) Clone() *ModStore {
 	return out
 }
 
-func (s *ModStore) EvalMod(m mod.Mod, cfg *ListCfg) interface{} {
+func (s *ModStore) evalMod(m mod.Mod, cfg *ListCfg) interface{} {
 	value := m.Value()
 
 	if len(m.Tags()) == 0 {
@@ -198,7 +198,7 @@ func (s *ModStore) EvalMod(m mod.Mod, cfg *ListCfg) interface{} {
 			*/
 
 			for _, stat := range tag.StatList {
-				base += target.GetStat(stat, cfg)
+				base += target.getStat(stat, cfg)
 			}
 
 			mult := math.Floor(base/tag.Divide + 0.0001)
@@ -546,7 +546,7 @@ func (s *ModStore) GetMultiplier(variable string, cfg *ListCfg, noMod bool) floa
 	return out
 }
 
-func (s *ModStore) GetStat(stat string, cfg *ListCfg) float64 {
+func (s *ModStore) getStat(stat string, cfg *ListCfg) float64 {
 	/*
 		TODO Mana handling
 		if stat == "ManaReservedPercent" then

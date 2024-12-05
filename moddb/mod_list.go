@@ -65,7 +65,7 @@ func (m *ModList) List(cfg *ListCfg, names ...string) []interface{} {
 			(cfg == nil || cfg.KeywordFlags == nil || mod.MatchKeywordFlags(*cfg.KeywordFlags, mo.KeywordFlags())) &&
 			(cfg == nil || cfg.Source == nil || *cfg.Source == mo.GetSource()) {
 
-			value := m.EvalMod(mo, cfg)
+			value := m.evalMod(mo, cfg)
 			if value != nil {
 				result = append(result, value)
 			}
@@ -97,7 +97,7 @@ func (m *ModList) Sum(modType mod.Type, cfg *ListCfg, names ...string) float64 {
 			(cfg == nil || cfg.KeywordFlags == nil || mod.MatchKeywordFlags(*cfg.KeywordFlags, mo.KeywordFlags())) &&
 			(cfg == nil || cfg.Source == nil || *cfg.Source == mo.GetSource()) {
 
-			value := m.EvalMod(mo, cfg)
+			value := m.evalMod(mo, cfg)
 			if value != nil {
 				result += value.(float64)
 			}
@@ -129,7 +129,7 @@ func (m *ModList) More(cfg *ListCfg, names ...string) float64 {
 			(cfg == nil || cfg.KeywordFlags == nil || mod.MatchKeywordFlags(*cfg.KeywordFlags, mo.KeywordFlags())) &&
 			(cfg == nil || cfg.Source == nil || *cfg.Source == mo.GetSource()) {
 
-			value := m.EvalMod(mo, cfg)
+			value := m.evalMod(mo, cfg)
 			if value != nil {
 				result = result * (1 + value.(float64)/100)
 			}
@@ -159,7 +159,7 @@ func (m *ModList) Flag(cfg *ListCfg, names ...string) bool {
 			(cfg == nil || cfg.KeywordFlags == nil || mod.MatchKeywordFlags(*cfg.KeywordFlags, mo.KeywordFlags())) &&
 			(cfg == nil || cfg.Source == nil || *cfg.Source == mo.GetSource()) {
 
-			value := m.EvalMod(mo, cfg)
+			value := m.evalMod(mo, cfg)
 			if value != nil && value.(bool) {
 				return true
 			}
@@ -191,7 +191,7 @@ func (m *ModList) Override(cfg *ListCfg, names ...string) interface{} {
 			(cfg == nil || cfg.KeywordFlags == nil || mod.MatchKeywordFlags(*cfg.KeywordFlags, mo.KeywordFlags())) &&
 			(cfg == nil || cfg.Source == nil || *cfg.Source == mo.GetSource()) {
 
-			value := m.EvalMod(mo, cfg)
+			value := m.evalMod(mo, cfg)
 			if value != nil {
 				return value
 			}
