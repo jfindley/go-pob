@@ -40,7 +40,7 @@ type skillGroup struct {
 // These two functions check for partial map equality - only keys present in the expected param will be checked.
 func assertMapEqual[M ~map[K]V, K comparable, V any](t *testing.T, expected, got M) {
 	for calc, want := range expected {
-		testza.AssertEqual(t, got[calc], want)
+		testza.AssertEqual(t, want, got[calc])
 	}
 }
 

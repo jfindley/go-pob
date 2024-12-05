@@ -7,10 +7,11 @@ import (
 
 	"github.com/Vilsol/go-pob/data"
 	"github.com/Vilsol/go-pob/mod"
+	"github.com/Vilsol/go-pob/moddb"
 	"github.com/Vilsol/go-pob/utils"
 )
 
-func calcDamage(activeSkill *ActiveSkill, output map[string]float64, cfg *ListCfg, breakdown interface{}, damageType data.DamageType, typeFlags int, convDst *data.DamageType) (float64, float64) {
+func calcDamage(activeSkill *ActiveSkill, output map[string]float64, cfg *moddb.ListCfg, breakdown interface{}, damageType data.DamageType, typeFlags int, convDst *data.DamageType) (float64, float64) {
 	typeFlags = typeFlags | data.DamageTypeFlags[damageType]
 
 	// Calculate conversions
@@ -96,7 +97,7 @@ local function calcAilmentSourceDamage(activeSkill, output, cfg, breakdown, dama
 end
 */
 
-func calcAilmentSourceDamage(activeSkill *ActiveSkill, output map[string]float64, cfg *ListCfg, breakdown map[string]interface{}, damageType data.DamageType, typeFlags int) (float64, float64) {
+func calcAilmentSourceDamage(activeSkill *ActiveSkill, output map[string]float64, cfg *moddb.ListCfg, breakdown map[string]interface{}, damageType data.DamageType, typeFlags int) (float64, float64) {
 	minDamage, maxDamage := calcDamage(activeSkill, output, cfg, breakdown, damageType, typeFlags, nil)
 	convMult := activeSkill.ConversionTable[damageType].Mult
 	/*
@@ -3041,7 +3042,7 @@ func CalculateOffence(env *Environment, actor *Actor, activeSkill *ActiveSkill) 
 			badIdea := maps.Clone(skillCfg.SkillCond)
 			badIdea["CriticalStrike"] = true
 
-			dotCfg := &ListCfg{
+			dotCfg := &moddb.ListCfg{
 				// TODO SkillName, SkillPart, SkillTypes, SkillDist
 				// SkillName: skillCfg.SkillName,
 				// SkillPart: skillCfg.SkillPart,

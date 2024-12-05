@@ -1,8 +1,11 @@
 package calculator
 
-import "github.com/Vilsol/go-pob/mod"
+import (
+	"github.com/Vilsol/go-pob/mod"
+	"github.com/Vilsol/go-pob/moddb"
+)
 
-type ConfigApplyFunc func(val interface{}, modList *ModList, enemyModList *ModList)
+type ConfigApplyFunc func(val interface{}, modList *moddb.ModList, enemyModList *moddb.ModList)
 
 var configurations = map[string]ConfigApplyFunc{
 	/*
@@ -535,7 +538,7 @@ var configurations = map[string]ConfigApplyFunc{
 		   		modList.AddMod(mod.NewFloat("FlaskLifeRecovery", mod.TypeIncrease, 20).Source("Lifetap"))
 		   	},
 	*/
-	"buffOnslaught": func(val interface{}, modList *ModList, enemyModList *ModList) {
+	"buffOnslaught": func(val interface{}, modList *moddb.ModList, enemyModList *moddb.ModList) {
 		modList.AddMod(mod.NewFlag("Condition:Onslaught", true).Source("Config").Tag(mod.Condition("Combat")))
 	},
 	/*

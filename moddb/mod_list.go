@@ -1,4 +1,4 @@
-package calculator
+package moddb
 
 import (
 	"github.com/Vilsol/go-pob/mod"

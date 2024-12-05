@@ -5,6 +5,7 @@ import (
 	"github.com/Vilsol/go-pob/data"
 	"github.com/Vilsol/go-pob/data/raw"
 	"github.com/Vilsol/go-pob/mod"
+	"github.com/Vilsol/go-pob/moddb"
 	"github.com/Vilsol/go-pob/pob"
 )
 
@@ -40,10 +41,10 @@ type Environment struct {
 	Mode  OutputMode
 	Spec  *PassiveSpec
 
-	ModDB      *ModDB
-	EnemyModDB *ModDB
-	ItemModDB  *ModDB
-	Minion     *ModDB
+	ModDB      *moddb.ModDB
+	EnemyModDB *moddb.ModDB
+	ItemModDB  *moddb.ModDB
+	Minion     *moddb.ModDB
 
 	EnemyLevel int
 
@@ -77,11 +78,11 @@ type Environment struct {
 
 type EnvironmentCache struct {
 	TreeVersion  data.TreeVersion
-	modsForNodes map[string]ModList // Mods for all nodes cached after being parsed
+	modsForNodes map[string]moddb.ModList // Mods for all nodes cached after being parsed
 }
 
 type Actor struct {
-	ModDB           *ModDB
+	ModDB           *moddb.ModDB
 	Level           int
 	Enemy           *Actor                 `json:"-"`
 	ItemList        map[string]interface{} // TODO Implement
@@ -93,6 +94,11 @@ type Actor struct {
 	WeaponData1     map[string]interface{} // TODO Implement. Might be SomeSource?
 	WeaponData2     map[string]interface{} // TODO Implement. Might be SomeSource?
 	StrDmgBonus     float64
+}
+
+func (a *Actor) GetOutput(stat string) (float64, bool) {
+	v, ok := a.Output[stat]
+	return v, ok
 }
 
 // TODO Fix Name
@@ -121,13 +127,13 @@ const (
 
 type ActiveSkill struct {
 	SkillFlags       map[SkillFlag]bool
-	SkillModList     *ModList
-	SkillCfg         *ListCfg
+	SkillModList     *moddb.ModList
+	SkillCfg         *moddb.ListCfg
 	SkillTypes       map[data.SkillType]bool
 	SkillData        map[string]interface{} // TODO Implement. Might be SkillData?
 	ActiveEffect     *GemEffect
-	Weapon1Cfg       *ListCfg
-	Weapon2Cfg       *ListCfg
+	Weapon1Cfg       *moddb.ListCfg
+	Weapon2Cfg       *moddb.ListCfg
 	SupportList      []*GemEffect
 	Actor            *Actor `json:"-"`
 	SocketGroup      interface{}
@@ -138,11 +144,11 @@ type ActiveSkill struct {
 	Weapon2Flags     mod.MFlag
 	EffectList       []*GemEffect
 	DisableReason    string
-	BaseSkillModList *ModList
+	BaseSkillModList *moddb.ModList
 	SlotName         string
 	MinionSkillTypes map[data.SkillType]bool
-	BleedCfg         *ListCfg
-	OHBleedCfg       *ListCfg
+	BleedCfg         *moddb.ListCfg
+	OHBleedCfg       *moddb.ListCfg
 }
 
 type ConversionTable struct {
@@ -233,7 +239,7 @@ func (g *GrantedEffect) CastTime() float64 {
 type DamagePass struct {
 	Label     string
 	Source    map[string]interface{}
-	Config    *ListCfg
+	Config    *moddb.ListCfg
 	Output    map[string]float64
 	Breakdown interface{} // TODO Implement Breakdown
 }
