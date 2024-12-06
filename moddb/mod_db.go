@@ -150,7 +150,7 @@ func (m *ModDB) More(cfg *ListCfg, names ...string) float64 {
 	return result
 }
 
-func (m *ModDB) Override(cfg *ListCfg, names ...string) interface{} {
+func (m *ModDB) Override(cfg *ListCfg, names ...string) *mod.ModValueMulti {
 	mappedNames := make(map[string]bool, 0)
 	for _, name := range names {
 		mappedNames[name] = true

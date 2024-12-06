@@ -1234,7 +1234,7 @@ func CalculateOffence(env *Environment, actor *Actor, activeSkill *ActiveSkill) 
 			activeSkill.Weapon1Cfg.SkillStats = outputTable[OutTableMainHand]
 			source := actor.WeaponData1 // TODO Copy
 			if critOverride != nil && source != nil && source["Type"] != "None" {
-				source["CritChance"] = critOverride.(float64)
+				source["CritChance"] = critOverride.Float()
 			}
 			passList = append(passList, &DamagePass{
 				Label:     "Main Hand",
@@ -1253,7 +1253,7 @@ func CalculateOffence(env *Environment, actor *Actor, activeSkill *ActiveSkill) 
 			activeSkill.Weapon2Cfg.SkillStats = outputTable[OutTableOffHand]
 			source := utils.CopyMap(actor.WeaponData2) // TODO Copy
 			if critOverride != nil && source != nil && source["Type"] != "None" {
-				source["CritChance"] = critOverride.(float64)
+				source["CritChance"] = critOverride.Float()
 			}
 			if utils.Has(skillData, "CritChance") {
 				source["CritChance"] = skillData["CritChance"]
@@ -2007,7 +2007,7 @@ func CalculateOffence(env *Environment, actor *Actor, activeSkill *ActiveSkill) 
 
 			critOverride := skillModList.Override(pass.Config, "CritChance")
 			if critOverride != nil {
-				baseCrit = critOverride.(float64)
+				baseCrit = critOverride.Float()
 			}
 
 			if baseCrit == 100 {
@@ -2093,7 +2093,7 @@ func CalculateOffence(env *Environment, actor *Actor, activeSkill *ActiveSkill) 
 				extraDamage := skillModList.Sum(mod.TypeBase, pass.Config, "CritMultiplier") / 100
 				multiOverride := skillModList.Override(skillCfg, "CritMultiplier")
 				if multiOverride != nil {
-					extraDamage = (multiOverride.(float64) - 100) / 100
+					extraDamage = (multiOverride.Float() - 100) / 100
 				}
 
 				if env.ModeEffective {
@@ -3074,7 +3074,7 @@ func CalculateOffence(env *Environment, actor *Actor, activeSkill *ActiveSkill) 
 			configStacks := enemyDB.Sum("BASE", nil, "Multiplier:BleedStacks")
 			maxStacks := skillModList.Sum("BASE", cfg, "BleedStacksMax")
 			if skillModList.Override(cfg, "BleedStacksMax") != nil {
-				maxStacks = skillModList.Override(cfg, "BleedStacksMax").(float64)
+				maxStacks = skillModList.Override(cfg, "BleedStacksMax").Float()
 			}
 			globalOutput["BleedStacksMax"] = maxStacks
 			durationBase := utils.Ternary(utils.Has(skillData, "bleedDurationIsSkillDuration"), skillData["duration"].(float64), data.BleedDurationBase)

@@ -21,7 +21,7 @@ type ModStoreFuncs interface {
 	Sum(modType mod.Type, cfg *ListCfg, names ...string) float64
 	More(cfg *ListCfg, names ...string) float64
 	Flag(cfg *ListCfg, names ...string) bool
-	Override(cfg *ListCfg, names ...string) interface{}
+	Override(cfg *ListCfg, names ...string) *mod.ModValueMulti
 	GetMultiplier(variable string, cfg *ListCfg, noMod bool) float64
 	GetCondition(variable string, cfg *ListCfg, noMod bool) (bool, bool)
 	Clone() ModStoreFuncs

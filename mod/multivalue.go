@@ -69,7 +69,7 @@ func NewModValueFlag(v bool) *ModValueMulti {
 
 func NewModValueList(v any) *ModValueMulti {
 	return &ModValueMulti{
-		valueType: ModValueMultiTypeFlag,
+		valueType: ModValueMultiTypeList,
 		ValueList: v,
 	}
 }

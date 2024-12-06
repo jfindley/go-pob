@@ -43,7 +43,7 @@ func CalculateDefence(environment *Environment, actor *Actor) {
 	actor.Output["DamageReductionMax"] = data.DamageReductionCap
 	DamageReductionMax := actor.ModDB.Override(nil, "DamageReductionMax")
 	if DamageReductionMax != nil {
-		actor.Output["DamageReductionMax"] = DamageReductionMax.(float64)
+		actor.Output["DamageReductionMax"] = DamageReductionMax.Float()
 	}
 
 	actor.Output["PhysicalResist"] = math.Min(math.Max(0, actor.ModDB.Sum(mod.TypeBase, nil, "PhysicalDamageReduction")), actor.Output["DamageReductionMax"])

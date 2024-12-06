@@ -2131,7 +2131,7 @@ func PerformCalc(env *Environment) {
 			env.Player.Output["ActiveTotemLimit"] = max(limit, env.Player.Output["ActiveTotemLimit"])
 			TotemsSummoned := env.ModDB.Override(nil, "TotemsSummoned")
 			if TotemsSummoned != nil {
-				env.Player.Output["TotemsSummoned"] = TotemsSummoned.(float64)
+				env.Player.Output["TotemsSummoned"] = TotemsSummoned.Float()
 			} else {
 				env.Player.Output["TotemsSummoned"] = 0
 			}
@@ -2449,7 +2449,7 @@ func doActorAttribsPoolsConditions(env *Environment, actor *Actor) {
 			accuracyMult := data.AccuracyPerDexBase
 			DexAccBonusOverride := env.ModDB.Override(nil, "DexAccBonusOverride")
 			if DexAccBonusOverride != nil {
-				accuracyMult = DexAccBonusOverride.(float64)
+				accuracyMult = DexAccBonusOverride.Float()
 			}
 
 			env.ModDB.AddMod(mod.NewFloat("Accuracy", mod.TypeBase, actor.Output["Dex"]*accuracyMult).Source("Dexterity"))

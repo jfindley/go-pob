@@ -24,7 +24,7 @@ func TestMultiplier(t *testing.T) {
 		cfg         *ListCfg
 		tag         *mod.MultiplierTag
 		multipliers map[string]float64
-		expected    float64
+		expected    *mod.ModValueMulti
 	}{
 		{
 			name: "single mod",
@@ -34,7 +34,7 @@ func TestMultiplier(t *testing.T) {
 				VariableList: []string{"FullLife"},
 			},
 			multipliers: map[string]float64{"FullLife": 200},
-			expected:    400,
+			expected:    mod.NewModValueFloat(400),
 		},
 		{
 			name: "limited mod",
@@ -46,7 +46,7 @@ func TestMultiplier(t *testing.T) {
 				TagLimitVariable: utils.Ptr("FullLife"),
 			},
 			multipliers: map[string]float64{"FullLife": 200},
-			expected:    150,
+			expected:    mod.NewModValueFloat(150),
 		},
 	}
 

@@ -327,7 +327,7 @@ func TestOverride(t *testing.T) {
 		mods        []mod.Mod
 		cfg         *ListCfg
 		mappedNames []string
-		expected    any
+		expected    *mod.ModValueMulti
 	}{
 		{
 			name:        "non-matching mod, empty modlist",
@@ -348,7 +348,7 @@ func TestOverride(t *testing.T) {
 			mappedNames: []string{
 				"testMod0", "testMod1", "testMod2",
 			},
-			expected: float64(40),
+			expected: mod.NewModValueFloat(40),
 		},
 	}
 

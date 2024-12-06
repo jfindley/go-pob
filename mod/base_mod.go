@@ -109,7 +109,7 @@ func NewFlag(name string, value bool) Mod {
 func NewList(name string, value any) Mod {
 	self := &BaseMod{
 		ModName:  name,
-		ModType:  TypeFlag,
+		ModType:  TypeList,
 		ModValue: NewModValueList(value),
 	}
 	self.child = self
