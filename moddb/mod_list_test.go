@@ -123,7 +123,6 @@ func TestList(t *testing.T) {
 			})
 		})
 	}
-
 }
 
 func TestSum(t *testing.T) {
@@ -193,7 +192,6 @@ func TestSum(t *testing.T) {
 			})
 		})
 	}
-
 }
 
 func TestMore(t *testing.T) {
@@ -247,7 +245,6 @@ func TestMore(t *testing.T) {
 			})
 		})
 	}
-
 }
 
 func TestFlag(t *testing.T) {
